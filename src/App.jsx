@@ -29,9 +29,12 @@ import Create_delivery from "./pages/admin/delivery/Create_delivery";
 import Expense from "./pages/admin/expense/Expense";
 import Expense_Category from "./pages/admin/expense/Expense_Category";
 import Expense_item from "./pages/admin/expense/Expense_item";
+import Payment_in from "./pages/admin/transaction/Payment_in";
+import Create_payment_in from "./pages/admin/transaction/Create_payment_in";
+import Payment_out from "./pages/admin/transaction/Payment_out";
 import Items from "./pages/admin/items/Items";
 import Add_Items from "./pages/admin/items/Add_Items";
-import Transaction from "./pages/admin/transaction/Transaction";
+// import Transaction from "./pages/admin/transaction/Transaction";
 import Invoice from "./pages/admin/invoice/Invoice";
 import Reports from "./pages/admin/reports/Reports";
 import Settings from "./pages/admin/settings/Settings";
@@ -80,15 +83,19 @@ const App = () => {
 
             <Route path="delivery" element={<Delivery />} />
             <Route path="create_delivery" element={<Create_delivery />} />
-            
+
             <Route path="expense" element={<Expense />} />
             <Route path="expense_category" element={<Expense_Category />} />
             <Route path="expense_item" element={<Expense_item />} />
 
+            <Route path="payment_in" element={<Payment_in />} />
+            <Route path="create_payment_in" element={<Create_payment_in />} />
+            <Route path="payment_out" element={<Payment_out />} />
+
             <Route path="items" element={<Items />} />
             <Route path="Add_items" element={<Add_Items />} />
 
-            <Route path="transaction" element={<Transaction />} />
+            {/* <Route path="transaction" element={<Transaction />} /> */}
             <Route path="invoice" element={<Invoice />} />
             <Route path="report" element={<Reports />} />
             <Route path="settings" element={<Settings />} />

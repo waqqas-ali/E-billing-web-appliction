@@ -601,13 +601,16 @@ const Sidebar = () => {
                       <NavItem to="/payment_out" icon={ArrowUpCircle}>
                         Payment Out
                       </NavItem>
-                      <NavItem to="/quotation" icon={ClipboardList}>
+                      {/* <NavItem to="/quotation" icon={ClipboardList}>
                         Quotation
-                      </NavItem>
+                      </NavItem> */}
                     </div>
+
                   )}
                 </div>
-
+                <NavItem to="/quotation" icon={ClipboardList}>
+                  Quotation
+                </NavItem>
                 {/* Other Items */}
                 {/* <NavItem to="/invoice" icon={Receipt}>
                   Invoices
