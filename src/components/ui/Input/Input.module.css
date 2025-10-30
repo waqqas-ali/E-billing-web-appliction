@@ -1,0 +1,77 @@
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  color: #a0aec0;
+  z-index: 1;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 12px 12px 45px; /* Space for left icon */
+  border: 2px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: #f7fafc;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #4a5568;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.input::placeholder {
+  color: #a0aec0;
+}
+
+.inputError {
+  border-color: #e53e3e;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1;
+}
+
+.toggleIcon {
+  width: 18px;
+  height: 18px;
+  color: #a0aec0;
+}
+
+.toggleIcon:hover {
+  color: #4a5568;
+}
+
+.error {
+  color: #e53e3e;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}

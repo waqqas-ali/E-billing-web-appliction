@@ -1,0 +1,55 @@
+.plansContainer {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.plansGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.planCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.price {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4299e1;
+}
+
+.duration {
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.description {
+  margin-bottom: 1rem;
+}
+
+.features {
+  list-style: none;
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+.features li {
+  margin-bottom: 0.5rem;
+}
+
+.purchaseSection {
+  text-align: center;
+}

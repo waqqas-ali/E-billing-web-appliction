@@ -1,0 +1,59 @@
+/* AdminLayout.module.css */
+.layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.mainSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Prevent flex overflow */
+}
+
+/* Navbar always stays on top inside mainSection */
+.navbarWrapper {
+  height: 4rem; /* Reserve space for navbar */
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Content below navbar */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* 
+ .layout {
+  display: flex;
+  height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.mainSection {
+  margin-left: 250px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  padding: 1rem;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  margin-top: 4rem;
+} */

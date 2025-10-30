@@ -1,0 +1,290 @@
+/* src/components/Navbar.module.css */
+
+/* Base */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 60;
+  transition: left 0.3s ease, width 0.3s ease;
+}
+
+/* Left: Search */
+.left {
+  display: flex;
+  align-items: center;
+}
+
+.searchWrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f9fafb;
+  border: 1px solid transparent;
+}
+
+.searchWrapper.searchOpen {
+  width: 220px;
+  border-color: #d1d5db;
+  background: white;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: #6b7280;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.searchInput {
+  width: 100%;
+  height: 100%;
+  padding: 0 12px 0 36px;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+.searchInput::placeholder {
+  color: #9ca3af;
+}
+
+/* Right: Icons + Dropdown */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.iconBtn, .userBtn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.iconBtn:hover, .userBtn:hover {
+  background: #f3f4f6;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  color: #4b5563;
+  transition: color 0.2s ease;
+}
+
+.iconBtn:hover .icon,
+.userBtn:hover .icon {
+  color: #111827;
+}
+
+/* Dropdown Menu */
+.dropdown {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 210px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: dropdownFade 0.2s ease-out;
+  z-index: 70;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* User Info */
+.userInfo {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 0.75rem;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.userName {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.9375rem;
+}
+
+.userRole {
+  color: #6b7280;
+  font-size: 0.8125rem;
+}
+
+/* Menu Items */
+.item {
+  display: flex;
+  align-items: center;
+  padding: 0.65rem 1rem;
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.item:hover {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.itemIcon {
+  width: 18px;
+  height: 18px;
+  margin-right: 0.75rem;
+  color: #6b7280;
+}
+
+.item:hover .itemIcon {
+  color: #111827;
+}
+
+.logout {
+  color: #dc2626;
+}
+
+.logout:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.logout .itemIcon {
+  color: #dc2626;
+}
+
+/* ---------- RESPONSIVE ---------- */
+
+/* Mobile */
+@media (max-width: 767px) {
+  .navbar {
+    padding: 0 1rem;
+    left: 0 !important;
+    width: 100% !important;
+  }
+
+  .searchWrapper {
+    width: 36px;
+    height: 36px;
+  }
+
+  .searchWrapper.searchOpen {
+    width: calc(100vw - 120px);
+    max-width: 280px;
+  }
+
+  .right {
+    gap: 0.75rem;
+  }
+
+  .iconBtn, .userBtn {
+    padding: 0.4rem;
+  }
+
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .menu {
+    min-width: 190px;
+    right: -8px;
+  }
+
+  .item {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .itemIcon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .navbar {
+    padding: 0 2rem 0 4rem;
+    left: 0;
+    width: 100%;
+  }
+
+  .searchWrapper {
+    width: 180px;
+  }
+
+  .searchWrapper.searchOpen {
+    width: 220px;
+  }
+}
+
+/* Desktop (with Sidebar) */
+@media (min-width: 1024px) {
+  .navbar {
+    left: 16rem;          /* Matches Sidebar width */
+    width: calc(100% - 16rem);
+    padding: 0 1.5rem;
+  }
+
+  .searchWrapper {
+    width: 200px;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1280px) {
+  .navbar {
+    left: 18rem;          /* Matches wider Sidebar */
+    width: calc(100% - 18rem);
+  }
+
+  .searchWrapper {
+    width: 240px;
+  }
+}

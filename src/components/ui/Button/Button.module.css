@@ -1,0 +1,56 @@
+.button {
+  width: 100%; /* Matches your submitBtn full-width */
+  padding: 12px; /* Base padding matching your submitBtn */
+  background: #2d3748; /* Default primary color */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primary {
+  background: #2d3748; /* Matches .submitBtn */
+}
+
+.primary:hover:not(:disabled) {
+  background: #1a202c; /* Matches .submitBtn:hover */
+  transform: translateY(-1px);
+}
+
+.secondary {
+  background: #e2e8f0; /* Fallback for secondary variant if needed */
+  color: #2d3748;
+}
+
+.secondary:hover:not(:disabled) {
+  background: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.small {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.medium {
+  padding: 12px; /* Matches your submitBtn */
+  font-size: 1rem;
+}
+
+.large {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+}
+
+.loading {
+  opacity: 0.8; /* Matches your .loading */
+}
+
+.button:disabled {
+  opacity: 0.6; /* Matches .submitBtn:disabled */
+  cursor: not-allowed;
+  transform: none; /* Matches .submitBtn:disabled */
+}
