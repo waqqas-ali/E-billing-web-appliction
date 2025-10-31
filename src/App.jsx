@@ -32,6 +32,7 @@ import Expense_item from "./pages/admin/expense/Expense_item";
 import Payment_in from "./pages/admin/transaction/Payment_in";
 import Create_payment_in from "./pages/admin/transaction/Create_payment_in";
 import Payment_out from "./pages/admin/transaction/Payment_out";
+import Create_payment_out from "./pages/admin/transaction/Create_payment_out";
 import Items from "./pages/admin/items/Items";
 import Add_Items from "./pages/admin/items/Add_Items";
 // import Transaction from "./pages/admin/transaction/Transaction";
@@ -91,6 +92,7 @@ const App = () => {
             <Route path="payment_in" element={<Payment_in />} />
             <Route path="create_payment_in" element={<Create_payment_in />} />
             <Route path="payment_out" element={<Payment_out />} />
+            <Route path="create_payment_out" element={<Create_payment_out />} />
 
             <Route path="items" element={<Items />} />
             <Route path="Add_items" element={<Add_Items />} />

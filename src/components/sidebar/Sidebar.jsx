@@ -465,7 +465,7 @@ const Sidebar = () => {
           {/* Logo */}
           <Link to="/" className={styles.logo}>
             <div className={styles.logoContent}>
-              <span className={styles.logoText}>E-Billing</span>
+              <span className={styles.logoText}>Techgicus E-Billing</span>
             </div>
           </Link>
 

@@ -30,7 +30,7 @@ const recentActivity = [
 const stats = [
   { title: 'Total Revenue', value: '$54,239', change: '+12.5%', icon: DollarSign, iconClass: 'iconRevenue' },
   { title: 'Total Users', value: '1,429', change: '+8.2%', icon: Users, iconClass: 'iconUsers' },
-  { title: 'Total Orders', value: '842', change: '+23.1%', icon: ShoppingCart, iconClass: 'iconOrders' },
+  { title: 'Total Invoices', value: '842', change: '+23.1%', icon: ShoppingCart, iconClass: 'iconOrders' },
   { title: 'Growth Rate', value: '32.5%', change: '+4.3%', icon: TrendingUp, iconClass: 'iconGrowth' },
 ];
 
