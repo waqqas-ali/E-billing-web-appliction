@@ -27,6 +27,7 @@ import Create_purchase_return from "./pages/admin/Purchase/Create_purchase_retur
 import Delivery from "./pages/admin/Delivery/Delivery";
 import Create_delivery from "./pages/admin/delivery/Create_delivery";
 import Expense from "./pages/admin/expense/Expense";
+import Create_expense from "./pages/admin/expense/Create_expense";
 import Expense_Category from "./pages/admin/expense/Expense_Category";
 import Expense_item from "./pages/admin/expense/Expense_item";
 import Payment_in from "./pages/admin/transaction/Payment_in";
@@ -36,6 +37,8 @@ import Create_payment_out from "./pages/admin/transaction/Create_payment_out";
 import Items from "./pages/admin/items/Items";
 import Add_Items from "./pages/admin/items/Add_Items";
 // import Transaction from "./pages/admin/transaction/Transaction";
+import Quotation from "./pages/admin/quotation/Quotation";
+import Create_quotation from "./pages/admin/quotation/Create_quotation";
 import Invoice from "./pages/admin/invoice/Invoice";
 import Reports from "./pages/admin/reports/Reports";
 import Settings from "./pages/admin/settings/Settings";
@@ -86,6 +89,7 @@ const App = () => {
             <Route path="create_delivery" element={<Create_delivery />} />
 
             <Route path="expense" element={<Expense />} />
+            <Route path="create_expense" element={<Create_expense />} />
             <Route path="expense_category" element={<Expense_Category />} />
             <Route path="expense_item" element={<Expense_item />} />
 
@@ -96,6 +100,9 @@ const App = () => {
 
             <Route path="items" element={<Items />} />
             <Route path="Add_items" element={<Add_Items />} />
+
+            <Route path="quotation" element={<Quotation />} />
+            <Route path="create_quotation" element={<Create_quotation />} />
 
             {/* <Route path="transaction" element={<Transaction />} /> */}
             <Route path="invoice" element={<Invoice />} />

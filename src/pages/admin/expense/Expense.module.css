@@ -29,7 +29,25 @@
     background: #f9fafb;
     min-height: 100vh;
   }
+  /* Additional styles for read-only inputs */
+.formInputReadOnly {
+    background: var(--gray-50) !important;
+    color: var(--gray-700) !important;
+    cursor: default !important;
+  }
   
+  .itemName {
+    font-weight: 600;
+    color: var(--gray-900);
+    flex: 1;
+  }
+  
+  .itemTotal {
+    font-weight: 700;
+    color: var(--primary-dark);
+    min-width: 100px;
+    text-align: right;
+  }
   .header {
     display: flex;
     justify-content: space-between;

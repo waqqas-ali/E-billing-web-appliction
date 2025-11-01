@@ -1,200 +1,264 @@
 import React, { useEffect, useState } from "react";
-import config from "../../../config/apiconfig";
 import axios from "axios";
-import "./category.css";
-function Category() {
+import config from "../../../config/apiconfig";
+import { toast } from "react-toastify";
+import "./Category.css";
+
+const Modal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>{title}</h3>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">{children}</div>
+      </div>
+    </div>
+  );
+};
+
+const Category = () => {
   const ebillingData = JSON.parse(localStorage.getItem("eBilling")) || {};
   const companyId = ebillingData?.selectedCompany?.id;
   const token = ebillingData?.accessToken;
 
-  const [categoryForm, setCategoryForm] = useState(false);
-  const [categoryName, setCategoryName] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [categoryData, setCategoryData] = useState([]);
-  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [categoryName, setCategoryName] = useState("");
 
-  async function handleSubmitCategory(e) {
-    e.preventDefault();
-    try {
-      setLoading(true);
-
-      if (editingCategoryId) {
-        // UPDATE with query param
-        await axios.put(
-          `${
-            config.BASE_URL
-          }/category/${editingCategoryId}?categoryName=${encodeURIComponent(
-            categoryName
-          )}`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        alert("Category updated successfully");
-      } else {
-        // CREATE with query param
-        await axios.post(
-          `${
-            config.BASE_URL
-          }/company/${companyId}/create/category?categoryName=${encodeURIComponent(
-            categoryName
-          )}`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        alert("Category created successfully");
-      }
-
-      // Reset form
-      setCategoryName("");
-      setCategoryForm(false);
-      setEditingCategoryId(null);
-      getAllCategory();
-    } catch (error) {
-      console.error("Error saving category:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // ✅ Delete Category
-  async function handleDeleteCategory(categoryId) {
-    if (!window.confirm("Are you sure you want to delete this category?"))
-      return;
-    try {
-      setLoading(true);
-      await axios.delete(`${config.BASE_URL}/category/${categoryId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      alert("Category deleted successfully");
-      getAllCategory();
-    } catch (error) {
-      console.log("Error deleting category:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // ✅ Fetch All Categories
-  async function getAllCategory() {
+  // Fetch all categories
+  const fetchCategories = async () => {
+    if (!companyId || !token) return;
     setLoading(true);
     try {
-      const response = await axios.get(
+      const res = await axios.get(
         `${config.BASE_URL}/company/${companyId}/categories`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log(response.data);
-      setCategoryData(response.data);
-    } catch (error) {
-      console.log("Error fetching categories:", error);
+      setCategories(res.data || []);
+    } catch (err) {
+      toast.error("Failed to load categories");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    getAllCategory();
-  }, []);
+    fetchCategories();
+  }, [companyId, token]);
 
-  if (loading) return <p>Loading...</p>;
+  const openModal = (category = null) => {
+    if (category) {
+      setEditingId(category.categoryId);
+      setCategoryName(category.categoryName);
+    } else {
+      setEditingId(null);
+      setCategoryName("");
+    }
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingId(null);
+    setCategoryName("");
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!categoryName.trim()) {
+      toast.error("Category name is required");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (editingId) {
+        await axios.put(
+          `${config.BASE_URL}/category/${editingId}?categoryName=${encodeURIComponent(
+            categoryName.trim()
+          )}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Category updated!");
+      } else {
+        await axios.post(
+          `${config.BASE_URL}/company/${companyId}/create/category?categoryName=${encodeURIComponent(
+            categoryName.trim()
+          )}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Category created!");
+      }
+      closeModal();
+      fetchCategories();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Operation failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this category?")) return;
+
+    setLoading(true);
+    try {
+      await axios.delete(`${config.BASE_URL}/category/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Category deleted!");
+      fetchCategories();
+    } catch (err) {
+      toast.error("Failed to delete category");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter categories
+  const filteredCategories = categories.filter((cat) =>
+    cat.categoryName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (!companyId || !token) {
+    return (
+      <div className="category-container">
+        <p className="error-message">Please login and select a company.</p>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <p>Category Page</p>
-
-      <div>
-        <div>
-          <input type="search" />
-        </div>
-        <div>
-          <button
-            onClick={() => {
-              setCategoryForm(!categoryForm);
-              setEditingCategoryId(null);
-              setCategoryName("");
-            }}
-          >
-            {editingCategoryId ? "Edit Category" : "Add Category"}
-          </button>
-        </div>
+    <div className="category-container">
+      <div className="category-header">
+        <h1>Manage Categories</h1>
+        <p>Organize your items by categories</p>
       </div>
 
-      {categoryForm && (
-        <div>
-          <button
-            onClick={() => {
-              setCategoryForm(false);
-              setEditingCategoryId(null);
-              setCategoryName("");
-            }}
-          >
-            X
-          </button>
+      {/* Search & Add */}
+      <div className="category-actions-bar">
+        <div className="search-input-group">
+          {/* <span className="search-icon">Search</span> */}
+          <input
+            type="text"
+            placeholder="Search categories..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label="Search categories"
+          />
+        </div>
+        <button
+          className="btn-primary add-category-btn"
+          onClick={() => openModal()}
+        >
+          <span>+ Add Category</span>
+        </button>
+      </div>
 
-          <form onSubmit={handleSubmitCategory}>
-            <label htmlFor="categoryName">
-              {editingCategoryId ? "Edit Category Name:" : "Category Name:"}
-            </label>
+      {/* Loading */}
+      {loading && <div className="loading-spinner"></div>}
+
+      {/* Table */}
+      <div className="category-table-wrapper">
+        {filteredCategories.length > 0 ? (
+          <table className="category-table">
+            <thead>
+              <tr>
+                {/* Serial Number Header */}
+                <th>No.</th>
+                <th>Category Name</th>
+                <th className="table-actions-header">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCategories.map((cat, index) => (
+                <tr key={cat.categoryId}>
+                  {/* Serial Number (1-based) */}
+                  <td>{index + 1}</td>
+
+                  <td>{cat.categoryName}</td>
+
+                  <td className="actions-cell">
+                    <button
+                      className="btn-action btn-edit"
+                      onClick={() => openModal(cat)}
+                      disabled={loading}
+                      aria-label={`Edit category ${cat.categoryName}`}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn-action btn-delete"
+                      onClick={() => handleDelete(cat.categoryId)}
+                      disabled={loading}
+                      aria-label={`Delete category ${cat.categoryName}`}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="no-data-message">
+            {searchTerm
+              ? "No categories found matching your search."
+              : "No categories yet. Click '+ Add Category' to create one."}
+          </p>
+        )}
+      </div>
+
+      {/* Modal Form */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        title={editingId ? "Edit Category" : "Add New Category"}
+      >
+        <form onSubmit={handleSubmit} className="category-form">
+          <div className="form-group">
+            <label htmlFor="catName">Category Name</label>
             <input
+              id="catName"
               type="text"
-              id="categoryName"
               value={categoryName}
               onChange={(e) => setCategoryName(e.target.value)}
+              placeholder="e.g., Electronics"
               required
+              autoFocus
+              aria-required="true"
             />
-            <button type="submit">
-              {editingCategoryId ? "Update" : "Submit"}
+          </div>
+          <div className="form-actions">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={closeModal}
+              disabled={loading}
+            >
+              Cancel
             </button>
-          </form>
-        </div>
-      )}
-
-      <h2>All Categories</h2>
-      {categoryData.length > 0 ? (
-        <table border="1" cellPadding="8" style={{ marginTop: "10px" }}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Category Name</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categoryData.map((cat) => (
-              <tr key={cat.categoryId}>
-                <td>{cat.categoryId}</td>
-                <td>{cat.categoryName}</td>
-                <td>
-                  <button
-                    onClick={() => {
-                      setEditingCategoryId(cat.categoryId);
-                      setCategoryName(cat.categoryName);
-                      setCategoryForm(true);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteCategory(cat.categoryId)}
-                    style={{ marginLeft: "8px", color: "red" }}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p>No categories found</p>
-      )}
-    </>
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={loading}
+            >
+              {loading ? "Saving..." : editingId ? "Update" : "Create"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </div>
   );
-}
+};
 
 export default Category;
