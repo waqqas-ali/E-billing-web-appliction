@@ -553,6 +553,8 @@
 
 
 
+
+
 // src/components/purchases/PurchasesList.jsx
 "use client";
 
@@ -560,7 +562,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import config from "../../../config/apiconfig";
-import styles from "../Styles/ScreenUI.module.css"; // SAME AS SalesList
+import styles from "../Styles/ScreenUI.module.css"; // Re-use same styles as SalesList
 import { toast } from "react-toastify";
 import {
   Plus,
@@ -568,6 +570,7 @@ import {
   Edit2,
   Trash2,
   X,
+  DollarSign,
   Package,
   AlertCircle,
   CheckCircle,
@@ -582,77 +585,52 @@ const PurchasesList = () => {
   const token = userData?.accessToken || "";
   const companyId = userData?.selectedCompany?.id || "";
 
+  /* ----------------------- STATE ----------------------- */
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
-  const [filterStartDate, setFilterStartDate] = useState("");
-  const [filterEndDate, setFilterEndDate] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPurchaseId, setSelectedPurchaseId] = useState(null);
+  const [remainingBalance, setRemainingBalance] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Default: last 30 days
-  const getDefaultDateRange = () => {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(end.getDate() - 30);
-    return {
-      startDate: start.toISOString().split("T")[0],
-      endDate: end.toISOString().split("T")[0],
-    };
-  };
+  const [paymentForm, setPaymentForm] = useState({
+    receiptNo: "",
+    paymentDate: new Date().toISOString().split("T")[0],
+    amountPaid: "",
+    paymentType: "CASH",
+    referenceNumber: "",
+    paymentDescription: "",
+  });
 
-  // Token validation
-  const isTokenValid = () => {
-    if (!token) return false;
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const now = Date.now() / 1000;
-      return payload.exp > now;
-    } catch {
-      return false;
-    }
-  };
+  const paymentTypes = [
+    "CASH",
+    "UPI",
+    "CREDIT_CARD",
+    "DEBIT_CARD",
+    "NET_BANKING",
+    "WALLET",
+    "CHEQUE",
+    "OTHER",
+  ];
 
-  // FETCH PURCHASES
+  /* ----------------------- FETCH PURCHASES ----------------------- */
   const fetchPurchases = async () => {
-    if (!token || !isTokenValid()) {
-      toast.error("Session expired. Please log in again.");
-      localStorage.removeItem("eBilling");
-      navigate("/login");
-      return;
-    }
-
-    if (!companyId) {
-      toast.error("No company selected.");
-      return;
-    }
-
-    const { startDate: defaultStart, endDate: defaultEnd } = getDefaultDateRange();
-    const params = {
-      startDate: filterStartDate || defaultStart,
-      endDate: filterEndDate || defaultEnd,
-    };
-
+    if (!token || !companyId) return;
     setLoading(true);
     try {
-      const res = await axios.get(`${config.BASE_URL}/company/${companyId}/purchases`, {
-        params,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 10000,
-      });
-
-      setPurchases(res.data || []);
-      toast.success("Purchases loaded");
+      const res = await axios.get(
+        `${config.BASE_URL}/company/${companyId}/purchases`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setPurchases(res.data);
     } catch (err) {
-      if (err.response?.status === 401) {
-        toast.error("Invalid or expired token. Logging out...");
-        localStorage.removeItem("eBilling");
-        navigate("/login");
-      } else {
-        toast.error(err.response?.data?.message || "Failed to load purchases");
-      }
+      toast.error("Failed to load purchases");
     } finally {
       setLoading(false);
     }
@@ -660,50 +638,115 @@ const PurchasesList = () => {
 
   useEffect(() => {
     fetchPurchases();
-    // eslint-disable-next-line
   }, [token, companyId]);
 
-  // DELETE
+  /* ----------------------- DELETE ----------------------- */
   const deletePurchase = async (purchaseId) => {
-    if (!window.confirm("Delete this purchase? This action cannot be undone.")) return;
+    if (!window.confirm("Are you sure you want to delete this purchase?")) return;
 
     try {
-      setLoading(true);
       await axios.delete(`${config.BASE_URL}/purchase/${purchaseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setPurchases((prev) => prev.filter((p) => p.purchaseId !== purchaseId));
+      toast.success("Purchase deleted successfully");
       setSelectedPurchase(null);
-      toast.success("Purchase deleted");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete");
-    } finally {
-      setLoading(false);
+      toast.error(err.response?.data?.message || "Failed to delete purchase");
     }
   };
 
-  // EDIT
+  /* ----------------------- EDIT NAV ----------------------- */
   const handleEdit = (purchaseId) => {
     navigate(`/createpurchase?edit=${purchaseId}`);
     setSelectedPurchase(null);
   };
 
-  // FILTER + SEARCH
-  const filteredPurchases = purchases.filter((p) => {
-    const matchesSearch =
-      p.billNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.partyResponseDto?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  /* ----------------------- PAYMENT MODAL ----------------------- */
+  const openPaymentModal = (purchase) => {
+    setSelectedPurchaseId(purchase.purchaseId);
+    setRemainingBalance(parseFloat(purchase.balance) || 0);
+    setPaymentForm({
+      receiptNo: "",
+      paymentDate: new Date().toISOString().split("T")[0],
+      amountPaid: "",
+      paymentType: "CASH",
+      referenceNumber: "",
+      paymentDescription: "",
+    });
+    setShowPaymentModal(true);
+  };
 
+  // CORRECT ENDPOINT: /purchase/{purchaseId}/make-payment
+  const handleAddPayment = async (e) => {
+    e.preventDefault();
+    if (!selectedPurchaseId) return;
+
+    const amount = parseFloat(paymentForm.amountPaid);
+    if (!paymentForm.paymentDate || !paymentForm.amountPaid || !paymentForm.paymentType) {
+      toast.error("Payment Date, Amount, and Type are required");
+      return;
+    }
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Amount must be greater than 0");
+      return;
+    }
+    if (amount > remainingBalance) {
+      toast.error(
+        `Payment amount (₹${amount}) exceeds remaining balance (₹${remainingBalance})`
+      );
+      return;
+    }
+
+    const payload = {
+      receiptNo: paymentForm.receiptNo || null,
+      paymentDate: paymentForm.paymentDate,
+      amountPaid: amount,
+      paymentType: paymentForm.paymentType,
+      referenceNumber: paymentForm.referenceNumber || null,
+      paymentDescription: paymentForm.paymentDescription || null,
+    };
+
+    try {
+      setLoading(true);
+      await axios.post(
+        `${config.BASE_URL}/purchase/${selectedPurchaseId}/make-payment`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      toast.success("Payment added successfully!");
+      setShowPaymentModal(false);
+      fetchPurchases();
+      setSelectedPurchase(null);
+    } catch (err) {
+      console.error("Make payment error:", err.response?.data);
+      toast.error(err.response?.data?.message || "Failed to add payment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ----------------------- FILTER ----------------------- */
+  const filteredPurchases = purchases.filter(
+    (p) =>
+      p.billNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.partyResponseDto?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  /* ----------------------- RENDER ----------------------- */
   return (
     <div className={styles["company-form-container"]}>
-      {/* HEADER */}
+      {/* Header Section */}
       <div className={styles["form-header"]}>
         <div className={styles["header-content"]}>
           <div className={styles["header-text"]}>
-            <h1 className={styles["company-form-title"]}>Purchases</h1>
+            <h1 className={styles["company-form-title"]}>Purchase Bills</h1>
             <p className={styles["form-subtitle"]}>Manage all your purchase bills</p>
           </div>
         </div>
@@ -713,54 +756,23 @@ const PurchasesList = () => {
           disabled={loading}
         >
           <Plus size={18} />
-          <span>New Purchase</span>
+          <span>Create Purchase</span>
         </button>
       </div>
 
-      {/* SEARCH + DATE FILTER */}
+      {/* Search Bar */}
       <div className={styles["search-container"]}>
         <Search size={18} className={styles["search-icon"]} />
         <input
           type="text"
-          placeholder="Search by bill # or party name..."
+          placeholder="Search by bill number or party name..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className={styles["search-input"]}
         />
       </div>
 
-      <div style={{ margin: "16px 0", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-        <div>
-          <label className={styles["form-label"]}>Start Date</label>
-          <input
-            type="date"
-            value={filterStartDate}
-            onChange={(e) => setFilterStartDate(e.target.value)}
-            className={styles["form-input"]}
-            style={{ width: "160px" }}
-          />
-        </div>
-        <div>
-          <label className={styles["form-label"]}>End Date</label>
-          <input
-            type="date"
-            value={filterEndDate}
-            onChange={(e) => setFilterEndDate(e.target.value)}
-            className={styles["form-input"]}
-            style={{ width: "160px" }}
-          />
-        </div>
-        <button
-          onClick={fetchPurchases}
-          className={styles["submit-button"]}
-          style={{ alignSelf: "end", height: "40px" }}
-          disabled={loading}
-        >
-          Apply Filter
-        </button>
-      </div>
-
-      {/* LOADING */}
+      {/* Loading State */}
       {loading && (
         <div className={styles["loading-message"]}>
           <Loader size={32} className={styles["spinner"]} />
@@ -768,21 +780,22 @@ const PurchasesList = () => {
         </div>
       )}
 
-      {/* TABLE / CARDS */}
+      {/* Purchases Grid/Table */}
       {filteredPurchases.length > 0 ? (
         <>
-          {/* Desktop Table */}
+          {/* Desktop Table View */}
           <div className={styles["table-wrapper"]}>
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Bill #</th>
+                  <th>Bill Number</th>
                   <th>Bill Date</th>
                   <th>Due Date</th>
-                  <th>Party</th>
-                  <th>Total</th>
+                  <th>Party Name</th>
+                  <th>Total Amount</th>
                   <th>Paid</th>
                   <th>Balance</th>
+                  <th>Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -795,25 +808,20 @@ const PurchasesList = () => {
                     <td>{new Date(p.billDate).toLocaleDateString()}</td>
                     <td>{new Date(p.dueDate).toLocaleDateString()}</td>
                     <td>
-                      <span className={styles["party-name"]}>
-                        {p.partyResponseDto?.name || "—"}
-                      </span>
+                      <span className={styles["party-name"]}>{p.partyResponseDto?.name || "—"}</span>
                     </td>
                     <td className={styles["amount-cell"]}>
-                      <span className={styles["amount"]}>
-                        ₹{Number.parseFloat(p.totalAmount).toFixed(2)}
+                      <span className={styles["amount"]}>₹{parseFloat(p.totalAmount).toFixed(2)}</span>
+                    </td>
+                    <td className={styles["received-cell"]}>₹{parseFloat(p.sendAmount).toFixed(2)}</td>
+                    <td className={styles["balance-cell"]}>
+                      <span className={p.balance > 0 ? styles["balance-pending"] : styles["balance-paid"]}>
+                        ₹{parseFloat(p.balance).toFixed(2)}
                       </span>
                     </td>
-                    <td className={styles["received-cell"]}>
-                      ₹{Number.parseFloat(p.sendAmount).toFixed(2)}
-                    </td>
-                    <td className={styles["balance-cell"]}>
-                      <span
-                        className={
-                          p.balance > 0 ? styles["balance-pending"] : styles["balance-paid"]
-                        }
-                      >
-                        ₹{Number.parseFloat(p.balance).toFixed(2)}
+                    <td>
+                      <span className={p.balance > 0 ? styles["status-pending"] : styles["status-paid"]}>
+                        {p.balance > 0 ? "Pending" : "Paid"}
                       </span>
                     </td>
                     <td className={styles["actions-cell"]}>
@@ -832,27 +840,18 @@ const PurchasesList = () => {
             </table>
           </div>
 
-          {/* Mobile Cards */}
+          {/* Mobile Card View */}
           <div className={styles["mobile-cards-container"]}>
             {filteredPurchases.map((p) => (
               <div key={p.purchaseId} className={styles["invoice-card"]}>
                 <div className={styles["card-header-mobile"]}>
                   <div className={styles["card-title-section"]}>
                     <h3 className={styles["card-invoice-number"]}>{p.billNumber}</h3>
-                    <span
-                      className={
-                        p.balance > 0
-                          ? styles["status-badge-pending"]
-                          : styles["status-badge-paid"]
-                      }
-                    >
+                    <span className={p.balance > 0 ? styles["status-badge-pending"] : styles["status-badge-paid"]}>
                       {p.balance > 0 ? "Pending" : "Paid"}
                     </span>
                   </div>
-                  <button
-                    onClick={() => setSelectedPurchase(p)}
-                    className={styles["card-action-button"]}
-                  >
+                  <button onClick={() => setSelectedPurchase(p)} className={styles["card-action-button"]}>
                     <ChevronDown size={20} />
                   </button>
                 </div>
@@ -860,41 +859,29 @@ const PurchasesList = () => {
                 <div className={styles["card-body"]}>
                   <div className={styles["card-info-row"]}>
                     <span className={styles["info-label"]}>Party:</span>
-                    <span className={styles["info-value"]}>
-                      {p.partyResponseDto?.name || "—"}
-                    </span>
+                    <span className={styles["info-value"]}>{p.partyResponseDto?.name || "—"}</span>
                   </div>
+
                   <div className={styles["card-info-row"]}>
-                    <span className={styles["info-label"]}>Bill Date:</span>
-                    <span className={styles["info-value"]}>
-                      {new Date(p.billDate).toLocaleDateString()}
-                    </span>
+                    <span className={styles["info-label"]}>Date:</span>
+                    <span className={styles["info-value"]}>{new Date(p.billDate).toLocaleDateString()}</span>
                   </div>
+
                   <div className={styles["card-info-row"]}>
                     <span className={styles["info-label"]}>Total:</span>
-                    <span className={styles["info-value-amount"]}>
-                      ₹{Number.parseFloat(p.totalAmount).toFixed(2)}
-                    </span>
+                    <span className={styles["info-value-amount"]}>₹{parseFloat(p.totalAmount).toFixed(2)}</span>
                   </div>
+
                   <div className={styles["card-info-row"]}>
                     <span className={styles["info-label"]}>Balance:</span>
-                    <span
-                      className={
-                        p.balance > 0
-                          ? styles["info-value-pending"]
-                          : styles["info-value-paid"]
-                      }
-                    >
-                      ₹{Number.parseFloat(p.balance).toFixed(2)}
+                    <span className={p.balance > 0 ? styles["info-value-pending"] : styles["info-value-paid"]}>
+                      ₹{parseFloat(p.balance).toFixed(2)}
                     </span>
                   </div>
                 </div>
 
                 <div className={styles["card-footer"]}>
-                  <button
-                    onClick={() => setSelectedPurchase(p)}
-                    className={styles["card-view-button"]}
-                  >
+                  <button onClick={() => setSelectedPurchase(p)} className={styles["card-view-button"]}>
                     <Eye size={16} />
                     View Details
                   </button>
@@ -904,40 +891,32 @@ const PurchasesList = () => {
           </div>
         </>
       ) : (
-        !loading && (
-          <div className={styles["no-data"]}>
-            <Package size={48} />
-            <p>No purchases found</p>
-            <p className={styles["no-data-subtitle"]}>
-              {searchTerm || filterStartDate || filterEndDate
-                ? "Try adjusting your filters"
-                : 'Click "New Purchase" to create one.'}
-            </p>
-          </div>
-        )
+        <div className={styles["no-data"]}>
+          <Package size={48} />
+          <p>No purchases found</p>
+          <p className={styles["no-data-subtitle"]}>
+            {searchTerm ? "Try adjusting your search criteria" : 'Click "Create Purchase" to add your first bill.'}
+          </p>
+        </div>
       )}
 
-      {/* VIEW MODAL */}
+      {/* VIEW MODAL WITH ACTIONS */}
       {selectedPurchase && (
         <div className={styles["modal-overlay"]} onClick={() => setSelectedPurchase(null)}>
           <div className={styles["detail-card"]} onClick={(e) => e.stopPropagation()}>
             <div className={styles["card-header"]}>
               <div className={styles["header-title-section"]}>
-                <h3>Purchase #{selectedPurchase.billNumber}</h3>
-                <div
-                  className={`${styles["balance-badge"]} ${
-                    selectedPurchase.balance <= 0 ? styles.paid : ""
-                  }`}
-                >
+                <h3>Purchase #{selectedPurchase.purchaseId}</h3>
+                <div className={`${styles["balance-badge"]} ${selectedPurchase.balance <= 0 ? styles.paid : ""}`}>
                   {selectedPurchase.balance > 0 ? (
                     <>
                       <AlertCircle size={16} />
-                      Balance: ₹{Number.parseFloat(selectedPurchase.balance).toFixed(2)}
+                      Balance: ₹{parseFloat(selectedPurchase.balance).toFixed(2)}
                     </>
                   ) : (
                     <>
                       <CheckCircle size={16} />
-                      Paid
+                      Paid: ₹{parseFloat(selectedPurchase.balance).toFixed(2)}
                     </>
                   )}
                 </div>
@@ -951,6 +930,18 @@ const PurchasesList = () => {
                   <Edit2 size={16} />
                   <span>Edit</span>
                 </button>
+
+                {selectedPurchase.balance > 0 && (
+                  <button
+                    onClick={() => openPaymentModal(selectedPurchase)}
+                    className={`${styles["action-button"]} ${styles["payment-button"]}`}
+                    title="Add Payment"
+                  >
+                    <DollarSign size={16} />
+                    <span>Add Payment</span>
+                  </button>
+                )}
+
                 <button
                   onClick={() => deletePurchase(selectedPurchase.purchaseId)}
                   className={`${styles["action-button"]} ${styles["delete-button"]}`}
@@ -959,11 +950,8 @@ const PurchasesList = () => {
                   <Trash2 size={16} />
                   <span>Delete</span>
                 </button>
-                <button
-                  className={styles["close-modal-btn"]}
-                  onClick={() => setSelectedPurchase(null)}
-                  title="Close"
-                >
+
+                <button className={styles["close-modal-btn"]} onClick={() => setSelectedPurchase(null)} title="Close">
                   <X size={20} />
                 </button>
               </div>
@@ -979,76 +967,56 @@ const PurchasesList = () => {
                 </div>
                 <div className={styles["detail-item"]}>
                   <span className={styles["detail-label"]}>Bill Date:</span>
-                  <span className={styles["detail-value"]}>
-                    {new Date(selectedPurchase.billDate).toLocaleDateString()}
-                  </span>
+                  <span className={styles["detail-value"]}>{new Date(selectedPurchase.billDate).toLocaleDateString()}</span>
                 </div>
                 <div className={styles["detail-item"]}>
                   <span className={styles["detail-label"]}>Due Date:</span>
-                  <span className={styles["detail-value"]}>
-                    {new Date(selectedPurchase.dueDate).toLocaleDateString()}
-                  </span>
+                  <span className={styles["detail-value"]}>{new Date(selectedPurchase.dueDate).toLocaleDateString()}</span>
                 </div>
                 <div className={styles["detail-item"]}>
                   <span className={styles["detail-label"]}>State of Supply:</span>
-                  <span className={styles["detail-value"]}>
-                    {selectedPurchase.stateOfSupply?.replace(/_/g, " ")}
-                  </span>
+                  <span className={styles["detail-value"]}>{selectedPurchase.stateOfSupply?.replace(/_/g, " ")}</span>
                 </div>
                 <div className={styles["detail-item"]}>
                   <span className={styles["detail-label"]}>Payment Type:</span>
                   <span className={styles["detail-value"]}>{selectedPurchase.paymentType}</span>
                 </div>
                 <div className={styles["detail-item"]}>
-                  <span className={styles["detail-label"]}>Description:</span>
-                  <span className={styles["detail-value"]}>
-                    {selectedPurchase.paymentDescription || "—"}
-                  </span>
+                  <span className={styles["detail-label"]}>Payment Description:</span>
+                  <span className={styles["detail-value"]}>{selectedPurchase.paymentDescription || "—"}</span>
                 </div>
               </div>
 
               <div className={styles["amount-breakdown"]}>
                 <div className={styles["breakdown-row"]}>
                   <span>Total (ex-tax):</span>
-                  <span>₹{Number.parseFloat(selectedPurchase.totalAmountWithoutTax || 0).toFixed(2)}</span>
+                  <span>₹{selectedPurchase.totalAmountWithoutTax}</span>
                 </div>
                 <div className={styles["breakdown-row"]}>
                   <span>Tax Amount:</span>
-                  <span>₹{Number.parseFloat(selectedPurchase.totalTaxAmount || 0).toFixed(2)}</span>
+                  <span>₹{selectedPurchase.totalTaxAmount}</span>
                 </div>
                 <div className={styles["breakdown-row"]}>
                   <span>Delivery Charges:</span>
-                  <span>₹{Number.parseFloat(selectedPurchase.deliveryCharges || 0).toFixed(2)}</span>
+                  <span>₹{selectedPurchase.deliveryCharges}</span>
                 </div>
-                <div className={styles[("breakdown-row", "total")]}>
+                <div className={styles["breakdown-row"]}>
                   <span>Total Amount:</span>
-                  <span className={styles["total-amount"]}>
-                    ₹{Number.parseFloat(selectedPurchase.totalAmount).toFixed(2)}
-                  </span>
+                  <span className={styles["total-amount"]}>₹{selectedPurchase.totalAmount}</span>
                 </div>
                 <div className={styles["breakdown-row"]}>
                   <span>Paid:</span>
-                  <span>₹{Number.parseFloat(selectedPurchase.sendAmount).toFixed(2)}</span>
+                  <span>₹{selectedPurchase.sendAmount}</span>
                 </div>
                 <div
                   className={`${styles["breakdown-row"]} ${
-                    selectedPurchase.balance > 0
-                      ? styles["balance-row-pending"]
-                      : styles["balance-row-paid"]
+                    selectedPurchase.balance > 0 ? styles["balance-row-pending"] : styles["balance-row-paid"]
                   }`}
                 >
                   <span>Balance:</span>
                   <span className={styles["balance-amount"]}>
-                    ₹{Number.parseFloat(selectedPurchase.balance).toFixed(2)}
+                    ₹{parseFloat(selectedPurchase.balance).toFixed(2)}
                   </span>
-                </div>
-                <div className={styles["breakdown-row"]}>
-                  <span>Paid Fully:</span>
-                  <span>{selectedPurchase.isPaid ? "Yes" : "No"}</span>
-                </div>
-                <div className={styles["breakdown-row"]}>
-                  <span>Overdue:</span>
-                  <span>{selectedPurchase.overdue ? "Yes" : "No"}</span>
                 </div>
               </div>
             </section>
@@ -1116,7 +1084,7 @@ const PurchasesList = () => {
                       <tr>
                         <th>Name</th>
                         <th>HSN</th>
-                        <th>Description</th>
+                        <th>Desc</th>
                         <th>Qty</th>
                         <th>Unit</th>
                         <th>Price/Unit</th>
@@ -1134,11 +1102,11 @@ const PurchasesList = () => {
                           <td>{it.itemDescription || "—"}</td>
                           <td>{it.quantity}</td>
                           <td>{it.unit}</td>
-                          <td>₹{Number.parseFloat(it.pricePerUnit || 0).toFixed(2)}</td>
+                          <td>₹{it.pricePerUnit}</td>
                           <td>{it.pricePerUnitTaxType}</td>
                           <td>{it.taxRate}</td>
-                          <td>₹{Number.parseFloat(it.totalTaxAmount || 0).toFixed(2)}</td>
-                          <td>₹{Number.parseFloat(it.totalAmount || 0).toFixed(2)}</td>
+                          <td>₹{it.totalTaxAmount}</td>
+                          <td>₹{it.totalAmount}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1149,20 +1117,21 @@ const PurchasesList = () => {
               )}
             </section>
 
-            {/* Payments (read-only) */}
+            {/* Payments */}
             <section className={styles["card-section"]}>
               <h4 className={styles["section-title"]}>Payments</h4>
               {selectedPurchase.purchasePaymentResponses?.length > 0 ? (
                 <ul className={styles["payment-list"]}>
-                  {selectedPurchase.purchasePaymentResponses.map((pay, i) => (
+                  {selectedPurchase.purchasePaymentResponses.map((p, i) => (
                     <li key={i} className={styles["payment-item"]}>
-                      <strong>₹{Number.parseFloat(pay.amountPaid).toFixed(2)}</strong> on{" "}
-                      {new Date(pay.paymentDate).toLocaleDateString()} – {pay.paymentType}
-                      <br />
-                      <small>
-                        Ref: {pay.referenceNumber || "—"} | Receipt: {pay.receiptNo || "—"}
-                        {pay.paymentDescription && ` | ${pay.paymentDescription}`}
-                      </small>
+                      <div className={styles["payment-info"]}>
+                        <span className={styles["payment-amount"]}>₹{p.amountPaid}</span>
+                        <span className={styles["payment-date"]}>{new Date(p.paymentDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className={styles["payment-type"]}>{p.paymentType}</div>
+                      {p.referenceNumber && <div className={styles["payment-ref"]}>Ref: {p.referenceNumber}</div>}
+                      {p.receiptNo && <div className={styles["payment-receipt"]}>Receipt: {p.receiptNo}</div>}
+                      {p.paymentDescription && <div className={styles["payment-desc"]}>{p.paymentDescription}</div>}
                     </li>
                   ))}
                 </ul>
@@ -1170,6 +1139,146 @@ const PurchasesList = () => {
                 <p>No payments recorded</p>
               )}
             </section>
+          </div>
+        </div>
+      )}
+
+      {/* ADD PAYMENT MODAL */}
+      {showPaymentModal && (
+        <div className={styles["modal-overlay"]} onClick={() => setShowPaymentModal(false)}>
+          <div className={styles["payment-modal"]} onClick={(e) => e.stopPropagation()}>
+            <div className={styles["modal-header"]}>
+              <h3>Add Payment for Purchase #{selectedPurchaseId}</h3>
+              <button className={styles["close-modal-btn"]} onClick={() => setShowPaymentModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddPayment} className={styles["payment-form"]}>
+              <div className={styles["form-row"]}>
+                <div className={styles["form-group"]}>
+                  <label>Receipt No</label>
+                  <input
+                    type="text"
+                    value={paymentForm.receiptNo}
+                    onChange={(e) =>
+                      setPaymentForm({ ...paymentForm, receiptNo: e.target.value })
+                    }
+                    className={styles["form-input"]}
+                    placeholder="Optional"
+                  />
+                </div>
+
+                <div className={styles["form-group"]}>
+                  <label>
+                    Payment Date <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={paymentForm.paymentDate}
+                    onChange={(e) =>
+                      setPaymentForm({ ...paymentForm, paymentDate: e.target.value })
+                    }
+                    required
+                    className={styles["form-input"]}
+                  />
+                </div>
+              </div>
+
+              <div className={styles["form-row"]}>
+                <div className={styles["form-group"]}>
+                  <label>
+                    Amount Paid <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={paymentForm.amountPaid}
+                    onChange={(e) =>
+                      setPaymentForm({ ...paymentForm, amountPaid: e.target.value })
+                    }
+                    required
+                    className={styles["form-input"]}
+                    placeholder={`Max: ₹${remainingBalance.toFixed(2)}`}
+                  />
+                  <small className={styles["balance-info"]}>
+                    Remaining Balance: ₹{remainingBalance.toFixed(2)}
+                  </small>
+                </div>
+
+                <div className={styles["form-group"]}>
+                  <label>
+                    Payment Type <span className={styles.required}>*</span>
+                  </label>
+                  <select
+                    value={paymentForm.paymentType}
+                    onChange={(e) =>
+                      setPaymentForm({ ...paymentForm, paymentType: e.target.value })
+                    }
+                    required
+                    className={styles["form-input"]}
+                  >
+                    {paymentTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles["form-row"]}>
+                <div className={styles["form-group"]}>
+                  <label>Reference Number</label>
+                  <input
+                    type="text"
+                    value={paymentForm.referenceNumber}
+                    onChange={(e) =>
+                      setPaymentForm({ ...paymentForm, referenceNumber: e.target.value })
+                    }
+                    className={styles["form-input"]}
+                    placeholder="UPI ID, Cheque #, etc."
+                  />
+                </div>
+
+                <div className={styles["form-group"]}>
+                  <label>Description</label>
+                  <textarea
+                    value={paymentForm.paymentDescription}
+                    onChange={(e) =>
+                      setPaymentForm({ ...paymentForm, paymentDescription: e.target.value })
+                    }
+                    className={`${styles["form-input"]} ${styles.textarea}`}
+                    placeholder="Optional notes"
+                  />
+                </div>
+              </div>
+
+              <div className={styles["form-actions"]}>
+                <button type="submit" className={styles["submit-button"]} disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader size={16} className={styles["button-spinner"]} />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <DollarSign size={16} />
+                      Add Payment
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className={styles["cancel-button"]}
+                  onClick={() => setShowPaymentModal(false)}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

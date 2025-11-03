@@ -410,16 +410,479 @@
 
 
 
+// // src/pages/items/Items.jsx
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import axios from "axios";
+// import config from "../../../config/apiconfig";
+// import styles from "./Item.module.css"; // Reuse Expense.module.css
+// import { toast } from "react-toastify";
+
+// const Items = () => {
+//   const navigate = useNavigate();
+//   const ebillingData = JSON.parse(localStorage.getItem("eBilling") || "{}");
+//   const companyId = ebillingData?.selectedCompany?.id;
+//   const token = ebillingData?.accessToken;
+
+//   const [items, setItems] = useState([]);
+//   const [categories, setCategories] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [showProducts, setShowProducts] = useState(true);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [selectedItem, setSelectedItem] = useState(null);
+
+//   // Fetch categories
+//   useEffect(() => {
+//     const fetchCategories = async () => {
+//       if (!token || !companyId) return;
+//       try {
+//         const response = await axios.get(
+//           `${config.BASE_URL}/company/${companyId}/categories`,
+//           {
+//             headers: {
+//               Authorization: `Bearer ${token}`,
+//               "Content-Type": "application/json",
+//             },
+//           }
+//         );
+//         setCategories(response.data);
+//       } catch (error) {
+//         console.error("Failed to fetch categories:", error);
+//         toast.error("Failed to fetch categories.");
+//       }
+//     };
+//     fetchCategories();
+//   }, [companyId, token]);
+
+//   // Fetch items
+//   useEffect(() => {
+//     if (!token || !companyId) {
+//       navigate("/login");
+//       return;
+//     }
+//     const fetchItems = async () => {
+//       setLoading(true);
+//       setError(null);
+//       try {
+//         const response = await axios.get(
+//           `${config.BASE_URL}/company/${companyId}/items`,
+//           {
+//             headers: {
+//               Authorization: `Bearer ${token}`,
+//               "Content-Type": "application/json",
+//             },
+//           }
+//         );
+//         setItems(response.data);
+//       } catch (error) {
+//         setError(error.response?.data?.message || "Failed to fetch items.");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     fetchItems();
+//   }, [companyId, token, navigate]);
+
+//   // Handle delete item
+//   const handleDeleteItem = async (itemId) => {
+//     if (!window.confirm("Are you sure you want to delete this item?")) return;
+//     try {
+//       setLoading(true);
+//       await axios.delete(`${config.BASE_URL}/item/${itemId}`, {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//           "Content-Type": "application/json",
+//         },
+//       });
+//       toast.success("Item deleted successfully");
+//       setItems((prev) => prev.filter((item) => item.itemId !== itemId));
+//     } catch (error) {
+//       toast.error("Failed to delete item.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Navigate to Add_Items
+//   const handleAddItem = (itemType) => {
+//     navigate("/Add_items", { state: { companyId, token, categories, itemType } });
+//   };
+
+//   const handleEditItem = (item) => {
+//     navigate("/Add_items", { state: { item, companyId, token, categories } });
+//   };
+
+//   // Filter items
+//   const filteredItems = items
+//     .filter((item) =>
+//       [item.itemName, item.itemHsn, item.itemCode, item.description]
+//         .filter(Boolean)
+//         .some((field) => field.toLowerCase().includes(searchTerm.toLowerCase()))
+//     )
+//     .filter((item) => item.itemType === (showProducts ? "PRODUCT" : "SERVICE"));
+
+//   return (
+//     <div className={styles.container}>
+//       {/* Header */}
+//       <div className={styles.header}>
+//         <div>
+//           <h1 className={styles.title}>Items</h1>
+//           <p className={styles.subtitle}>
+//             Manage your {showProducts ? "products" : "services"}
+//           </p>
+//         </div>
+//         <button
+//           onClick={() => handleAddItem(showProducts ? "PRODUCT" : "SERVICE")}
+//           className={styles.createBtn}
+//           disabled={loading}
+//         >
+//           + Add {showProducts ? "Product" : "Service"}
+//         </button>
+//       </div>
+
+//       {/* Search & Filter */}
+//       <div className={styles.actions}>
+//         <div className={styles.searchWrapper}>
+//           <i className="fas fa-search"></i>
+//           <input
+//             type="search"
+//             placeholder="Search by name, HSN, code, or description..."
+//             className={styles.searchInput}
+//             value={searchTerm}
+//             onChange={(e) => setSearchTerm(e.target.value)}
+//             disabled={loading}
+//           />
+//         </div>
+//         <div className={styles["filter-buttons"]}>
+//           <button
+//             onClick={() => setShowProducts(true)}
+//             className={`${styles["filter-button"]} ${showProducts ? styles.active : ""}`}
+//             disabled={loading}
+//           >
+//             Products
+//           </button>
+//           <button
+//             onClick={() => setShowProducts(false)}
+//             className={`${styles["filter-button"]} ${!showProducts ? styles.active : ""}`}
+//             disabled={loading}
+//           >
+//             Services
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Loading */}
+//       {loading && (
+//         <div className={styles.loading}>
+//           <div className={styles.spinner}>Loading</div>
+//           <p>Loading items...</p>
+//         </div>
+//       )}
+
+//       {/* Error */}
+//       {error && <div className={styles.error}>{error}</div>}
+
+//       {/* Desktop Table */}
+//       {!loading && filteredItems.length > 0 && (
+//         <div className={styles.tableContainer}>
+//           <table className={styles.table}>
+//             <thead>
+//               <tr>
+//                 <th>ID</th>
+//                 <th>Name</th>
+//                 <th>HSN</th>
+//                 <th>Code</th>
+//                 <th>Base Unit</th>
+//                 <th>Sale Price</th>
+//                 {showProducts && <th>Purchase Price</th>}
+//                 <th>Tax Rate</th>
+//                 {showProducts && <th>Stock Qty</th>}
+//                 <th>Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {filteredItems.map((item) => (
+//                 <tr key={item.itemId}>
+//                   <td className={styles.nameCell}>{item.itemId}</td>
+//                   <td>{item.itemName || "—"}</td>
+//                   <td>{item.itemHsn || "—"}</td>
+//                   <td>{item.itemCode || "—"}</td>
+//                   <td>{item.baseUnit || "—"}</td>
+//                   <td>₹{item.salePrice || "0"}</td>
+//                   {showProducts && <td>₹{item.purchasePrice || "0"}</td>}
+//                   <td>{item.taxRate || "—"}</td>
+//                   {showProducts && <td>{item.stockOpeningQty || "0"}</td>}
+//                   <td className={styles.actionsCell}>
+//                     <button
+//                       onClick={() => setSelectedItem(item)}
+//                       className={styles.editBtn}
+//                       title="View"
+//                     >
+//                       View
+//                     </button>
+//                     <button
+//                       onClick={() => handleEditItem(item)}
+//                       className={styles.editBtn}
+//                       title="Edit"
+//                     >
+//                       Edit
+//                     </button>
+//                     <button
+//                       onClick={() => handleDeleteItem(item.itemId)}
+//                       className={styles.deleteBtn}
+//                       title="Delete"
+//                     >
+//                       Delete
+//                     </button>
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         </div>
+//       )}
+
+//       {/* Mobile Cards */}
+//       {!loading && filteredItems.length > 0 && (
+//         <div className={styles.cards}>
+//           {filteredItems.map((item) => (
+//             <div key={item.itemId} className={styles.card}>
+//               <div className={styles.cardHeader}>
+//                 <h3 className={styles.cardTitle}>{item.itemName || "Unnamed"}</h3>
+//                 <span className={styles.cardBadge}>{item.itemType}</span>
+//               </div>
+//               <div className={styles.cardBody}>
+//                 <div className={styles.cardRow}>
+//                   <strong>ID:</strong> {item.itemId}
+//                 </div>
+//                 <div className={styles.cardRow}>
+//                   <strong>HSN:</strong> {item.itemHsn || "—"}
+//                 </div>
+//                 <div className={styles.cardRow}>
+//                   <strong>Code:</strong> {item.itemCode || "—"}
+//                 </div>
+//                 <div className={styles.cardRow}>
+//                   <strong>Sale Price:</strong> ₹{item.salePrice || "0"}
+//                 </div>
+//                 {showProducts && (
+//                   <>
+//                     <div className={styles.cardRow}>
+//                       <strong>Purchase Price:</strong> ₹{item.purchasePrice || "0"}
+//                     </div>
+//                     <div className={styles.cardRow}>
+//                       <strong>Stock:</strong> {item.stockOpeningQty || "0"}
+//                     </div>
+//                   </>
+//                 )}
+//               </div>
+//               <div className={styles.cardFooter}>
+//                 <button
+//                   onClick={() => setSelectedItem(item)}
+//                   className={styles.cardEdit}
+//                 >
+//                   View
+//                 </button>
+//                 <button
+//                   onClick={() => handleEditItem(item)}
+//                   className={styles.cardEdit}
+//                 >
+//                   Edit
+//                 </button>
+//                 <button
+//                   onClick={() => handleDeleteItem(item.itemId)}
+//                   className={styles.cardDelete}
+//                 >
+//                   Delete
+//                 </button>
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+//       )}
+
+//       {/* Empty State */}
+//       {!loading && filteredItems.length === 0 && (
+//         <div className={styles.empty}>
+//           <div className={styles.emptyIcon}>Empty</div>
+//           <p>No {showProducts ? "products" : "services"} found</p>
+//           <p className={styles.emptySub}>
+//             Click "Add {showProducts ? "Product" : "Service"}" to create one.
+//           </p>
+//         </div>
+//       )}
+
+//       {/* View Modal */}
+//       {selectedItem && (
+//         <div className={styles.modalOverlay} onClick={() => setSelectedItem(null)}>
+//           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+//             <div className={styles.modalHeader}>
+//               <h2 className={styles.modalTitle}>Item #{selectedItem.itemId}</h2>
+//               <button className={styles.closeBtn} onClick={() => setSelectedItem(null)}>
+//                 Close
+//               </button>
+//             </div>
+
+//             <div className={styles.modalForm}>
+//               <section className={styles.section}>
+//                 <h3 className={styles.sectionTitle}>Basic Info</h3>
+//                 <div className={styles.formGrid}>
+//                   <div className={styles.formGroup}>
+//                     <label>Name</label>
+//                     <input type="text" value={selectedItem.itemName || "—"} readOnly />
+//                   </div>
+//                   <div className={styles.formGroup}>
+//                     <label>HSN</label>
+//                     <input type="text" value={selectedItem.itemHsn || "—"} readOnly />
+//                   </div>
+//                   <div className={styles.formGroup}>
+//                     <label>Code</label>
+//                     <input type="text" value={selectedItem.itemCode || "—"} readOnly />
+//                   </div>
+//                   <div className={styles.formGroup}>
+//                     <label>Type</label>
+//                     <input type="text" value={selectedItem.itemType || "—"} readOnly />
+//                   </div>
+//                   <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+//                     <label>Description</label>
+//                     <textarea value={selectedItem.description || "—"} readOnly rows={2} />
+//                   </div>
+//                 </div>
+//               </section>
+
+//               <section className={styles.section}>
+//                 <h3 className={styles.sectionTitle}>Pricing & Tax</h3>
+//                 <div className={styles.formGrid}>
+//                   <div className={styles.formGroup}>
+//                     <label>Sale Price</label>
+//                     <input type="text" value={`₹${selectedItem.salePrice || "0"}`} readOnly />
+//                   </div>
+//                   <div className={styles.formGroup}>
+//                     <label>Sale Tax Type</label>
+//                     <input type="text" value={selectedItem.saleTaxType || "—"} readOnly />
+//                   </div>
+//                   {showProducts && (
+//                     <>
+//                       <div className={styles.formGroup}>
+//                         <label>Purchase Price</label>
+//                         <input type="text" value={`₹${selectedItem.purchasePrice || "0"}`} readOnly />
+//                       </div>
+//                       <div className={styles.formGroup}>
+//                         <label>Purchase Tax Type</label>
+//                         <input type="text" value={selectedItem.purchaseTaxType || "—"} readOnly />
+//                       </div>
+//                     </>
+//                   )}
+//                   <div className={styles.formGroup}>
+//                     <label>Tax Rate</label>
+//                     <input type="text" value={selectedItem.taxRate || "—"} readOnly />
+//                   </div>
+//                   <div className={styles.formGroup}>
+//                     <label>Discount</label>
+//                     <input type="text" value={`${selectedItem.saleDiscountPrice || "0"} (${selectedItem.saleDiscountType || "—"})`} readOnly />
+//                   </div>
+//                 </div>
+//               </section>
+
+//               {showProducts && (
+//                 <section className={styles.section}>
+//                   <h3 className={styles.sectionTitle}>Stock</h3>
+//                   <div className={styles.formGrid}>
+//                     <div className={styles.formGroup}>
+//                       <label>Opening Qty</label>
+//                       <input type="text" value={selectedItem.stockOpeningQty || "0"} readOnly />
+//                     </div>
+//                     <div className={styles.formGroup}>
+//                       <label>Stock Price</label>
+//                       <input type="text" value={`₹${selectedItem.stockPrice || "0"}`} readOnly />
+//                     </div>
+//                     <div className={styles.formGroup}>
+//                       <label>Stock Date</label>
+//                       <input
+//                         type="text"
+//                         value={
+//                           selectedItem.stockOpeningDate
+//                             ? new Date(selectedItem.stockOpeningDate).toLocaleDateString()
+//                             : "—"
+//                         }
+//                         readOnly
+//                       />
+//                     </div>
+//                     <div className={styles.formGroup}>
+//                       <label>Min Stock</label>
+//                       <input type="text" value={selectedItem.minimumStockToMaintain || "0"} readOnly />
+//                     </div>
+//                     <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+//                       <label>Location</label>
+//                       <input type="text" value={selectedItem.openingStockLocation || "—"} readOnly />
+//                     </div>
+//                   </div>
+//                 </section>
+//               )}
+
+//               <section className={styles.section}>
+//                 <h3 className={styles.sectionTitle}>Units</h3>
+//                 <div className={styles.formGrid}>
+//                   <div className={styles.formGroup}>
+//                     <label>Base Unit</label>
+//                     <input type="text" value={selectedItem.baseUnit || "—"} readOnly />
+//                   </div>
+//                   <div className={styles.formGroup}>
+//                     <label>Secondary Unit</label>
+//                     <input type="text" value={selectedItem.secondaryUnit || "—"} readOnly />
+//                   </div>
+//                   <div className={styles.formGroup}>
+//                     <label>Conversion</label>
+//                     <input type="text" value={selectedItem.baseUnitToSecondaryUnit || "—"} readOnly />
+//                   </div>
+//                 </div>
+//               </section>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default Items;
+
+
+
+
+
+
+
+
 // src/pages/items/Items.jsx
+"use client";
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import config from "../../../config/apiconfig";
-import styles from "./Item.module.css"; // Reuse Expense.module.css
+import styles from "../Styles/ScreenUI.module.css"; // Using same styles as SalesList
 import { toast } from "react-toastify";
+import {
+  Plus,
+  Eye,
+  Edit2,
+  Trash2,
+  X,
+  Package,
+  Search,
+  Loader,
+  ChevronDown,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 
 const Items = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
+  // const ebillingData = JSON.parse(localStorage.getItem("eBilling") || "{})
+  // const companyId = ebillingData?.selectedCompany?.id;
+  // const token = ebillingData?.accessToken;
+    const navigate = useNavigate();
   const ebillingData = JSON.parse(localStorage.getItem("eBilling") || "{}");
   const companyId = ebillingData?.selectedCompany?.id;
   const token = ebillingData?.accessToken;
@@ -523,321 +986,372 @@ const Items = () => {
     .filter((item) => item.itemType === (showProducts ? "PRODUCT" : "SERVICE"));
 
   return (
-    <div className={styles.container}>
-      {/* Header */}
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Items</h1>
-          <p className={styles.subtitle}>
-            Manage your {showProducts ? "products" : "services"}
-          </p>
+    <div className={styles["company-form-container"]}>
+      {/* HEADER */}
+      <div className={styles["form-header"]}>
+        <div className={styles["header-content"]}>
+          <div className={styles["header-icon"]}>
+            <Package size={32} style={{ color: "var(--primary-color)" }} />
+          </div>
+          <div className={styles["header-text"]}>
+            <h1 className={styles["company-form-title"]}>Items</h1>
+            <p className={styles["form-subtitle"]}>
+              Manage your {showProducts ? "products" : "services"}
+            </p>
+          </div>
         </div>
         <button
           onClick={() => handleAddItem(showProducts ? "PRODUCT" : "SERVICE")}
-          className={styles.createBtn}
+          className={styles["submit-button"]}
           disabled={loading}
         >
-          + Add {showProducts ? "Product" : "Service"}
+          <Plus size={18} />
+          <span>Add {showProducts ? "Product" : "Service"}</span>
         </button>
       </div>
 
-      {/* Search & Filter */}
-      <div className={styles.actions}>
-        <div className={styles.searchWrapper}>
-          <i className="fas fa-search"></i>
-          <input
-            type="search"
-            placeholder="Search by name, HSN, code, or description..."
-            className={styles.searchInput}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            disabled={loading}
-          />
-        </div>
-        <div className={styles["filter-buttons"]}>
-          <button
-            onClick={() => setShowProducts(true)}
-            className={`${styles["filter-button"]} ${showProducts ? styles.active : ""}`}
-            disabled={loading}
-          >
-            Products
-          </button>
-          <button
-            onClick={() => setShowProducts(false)}
-            className={`${styles["filter-button"]} ${!showProducts ? styles.active : ""}`}
-            disabled={loading}
-          >
-            Services
-          </button>
-        </div>
+      {/* SEARCH & TABS */}
+      <div className={styles["search-container"]}>
+        <Search size={18} className={styles["search-icon"]} />
+        <input
+          type="text"
+          placeholder="Search by name, HSN, code, or description..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={styles["search-input"]}
+          disabled={loading}
+        />
       </div>
 
-      {/* Loading */}
+      <div style={{ margin: "16px 0", display: "flex", gap: "12px" }}>
+        <button
+          onClick={() => setShowProducts(true)}
+          className={`${styles["submit-button"]} ${showProducts ? styles["active-tab"] : ""}`}
+          style={{ width: "auto", padding: "8px 16px", fontSize: "0.9rem" }}
+          disabled={loading}
+        >
+          Products
+        </button>
+        <button
+          onClick={() => setShowProducts(false)}
+          className={`${styles["submit-button"]} ${!showProducts ? styles["active-tab"] : ""}`}
+          style={{ width: "auto", padding: "8px 16px", fontSize: "0.9rem" }}
+          disabled={loading}
+        >
+          Services
+        </button>
+      </div>
+
+      {/* LOADING */}
       {loading && (
-        <div className={styles.loading}>
-          <div className={styles.spinner}>Loading</div>
+        <div className={styles["loading-message"]}>
+          <Loader size={32} className={styles["spinner"]} />
           <p>Loading items...</p>
         </div>
       )}
 
-      {/* Error */}
-      {error && <div className={styles.error}>{error}</div>}
+      {/* ERROR */}
+      {error && (
+        <div className={styles["no-data"]}>
+          <AlertCircle size={48} style={{ color: "#e74c3c" }} />
+          <p>{error}</p>
+        </div>
+      )}
 
-      {/* Desktop Table */}
-      {!loading && filteredItems.length > 0 && (
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>HSN</th>
-                <th>Code</th>
-                <th>Base Unit</th>
-                <th>Sale Price</th>
-                {showProducts && <th>Purchase Price</th>}
-                <th>Tax Rate</th>
-                {showProducts && <th>Stock Qty</th>}
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredItems.map((item) => (
-                <tr key={item.itemId}>
-                  <td className={styles.nameCell}>{item.itemId}</td>
-                  <td>{item.itemName || "—"}</td>
-                  <td>{item.itemHsn || "—"}</td>
-                  <td>{item.itemCode || "—"}</td>
-                  <td>{item.baseUnit || "—"}</td>
-                  <td>₹{item.salePrice || "0"}</td>
-                  {showProducts && <td>₹{item.purchasePrice || "0"}</td>}
-                  <td>{item.taxRate || "—"}</td>
-                  {showProducts && <td>{item.stockOpeningQty || "0"}</td>}
-                  <td className={styles.actionsCell}>
-                    <button
-                      onClick={() => setSelectedItem(item)}
-                      className={styles.editBtn}
-                      title="View"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => handleEditItem(item)}
-                      className={styles.editBtn}
-                      title="Edit"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteItem(item.itemId)}
-                      className={styles.deleteBtn}
-                      title="Delete"
-                    >
-                      Delete
-                    </button>
-                  </td>
+      {/* TABLE / CARDS */}
+      {filteredItems.length > 0 ? (
+        <>
+          {/* Desktop Table */}
+          <div className={styles["table-wrapper"]}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>HSN</th>
+                  <th>Code</th>
+                  <th>Base Unit</th>
+                  <th>Sale Price</th>
+                  {showProducts && <th>Purchase Price</th>}
+                  <th>Tax Rate</th>
+                  {showProducts && <th>Stock Qty</th>}
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {filteredItems.map((item) => (
+                  <tr key={item.itemId} className={styles["table-row"]}>
+                    <td className={styles["invoice-cell"]}>
+                      <span className={styles["invoice-badge"]}>{item.itemId}</span>
+                    </td>
+                    <td>
+                      <span className={styles["party-name"]}>{item.itemName || "—"}</span>
+                    </td>
+                    <td>{item.itemHsn || "—"}</td>
+                    <td>{item.itemCode || "—"}</td>
+                    <td>{item.baseUnit || "—"}</td>
+                    <td className={styles["amount-cell"]}>
+                      <span className={styles["amount"]}>₹{item.salePrice || "0"}</span>
+                    </td>
+                    {showProducts && (
+                      <td className={styles["received-cell"]}>₹{item.purchasePrice || "0"}</td>
+                    )}
+                    <td>{item.taxRate || "—"}</td>
+                    {showProducts && <td>{item.stockOpeningQty || "0"}</td>}
+                    <td className={styles["actions-cell"]}>
+                      <button
+                        onClick={() => setSelectedItem(item)}
+                        className={`${styles["action-button"]} ${styles["view-button"]}`}
+                        title="View"
+                      >
+                        <Eye size={16} />
+                        <span>View</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-      {/* Mobile Cards */}
-      {!loading && filteredItems.length > 0 && (
-        <div className={styles.cards}>
-          {filteredItems.map((item) => (
-            <div key={item.itemId} className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h3 className={styles.cardTitle}>{item.itemName || "Unnamed"}</h3>
-                <span className={styles.cardBadge}>{item.itemType}</span>
-              </div>
-              <div className={styles.cardBody}>
-                <div className={styles.cardRow}>
-                  <strong>ID:</strong> {item.itemId}
+          {/* Mobile Cards */}
+          <div className={styles["mobile-cards-container"]}>
+            {filteredItems.map((item) => (
+              <div key={item.itemId} className={styles["invoice-card"]}>
+                <div className={styles["card-header-mobile"]}>
+                  <div className={styles["card-title-section"]}>
+                    <h3 className={styles["card-invoice-number"]}>{item.itemName || "Unnamed"}</h3>
+                    <span className={styles["status-badge"]}>{item.itemType}</span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedItem(item)}
+                    className={styles["card-action-button"]}
+                  >
+                    <ChevronDown size={20} />
+                  </button>
                 </div>
-                <div className={styles.cardRow}>
-                  <strong>HSN:</strong> {item.itemHsn || "—"}
-                </div>
-                <div className={styles.cardRow}>
-                  <strong>Code:</strong> {item.itemCode || "—"}
-                </div>
-                <div className={styles.cardRow}>
-                  <strong>Sale Price:</strong> ₹{item.salePrice || "0"}
-                </div>
-                {showProducts && (
-                  <>
-                    <div className={styles.cardRow}>
-                      <strong>Purchase Price:</strong> ₹{item.purchasePrice || "0"}
-                    </div>
-                    <div className={styles.cardRow}>
-                      <strong>Stock:</strong> {item.stockOpeningQty || "0"}
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className={styles.cardFooter}>
-                <button
-                  onClick={() => setSelectedItem(item)}
-                  className={styles.cardEdit}
-                >
-                  View
-                </button>
-                <button
-                  onClick={() => handleEditItem(item)}
-                  className={styles.cardEdit}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteItem(item.itemId)}
-                  className={styles.cardDelete}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
-      {/* Empty State */}
-      {!loading && filteredItems.length === 0 && (
-        <div className={styles.empty}>
-          <div className={styles.emptyIcon}>Empty</div>
-          <p>No {showProducts ? "products" : "services"} found</p>
-          <p className={styles.emptySub}>
-            Click "Add {showProducts ? "Product" : "Service"}" to create one.
-          </p>
-        </div>
-      )}
-
-      {/* View Modal */}
-      {selectedItem && (
-        <div className={styles.modalOverlay} onClick={() => setSelectedItem(null)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Item #{selectedItem.itemId}</h2>
-              <button className={styles.closeBtn} onClick={() => setSelectedItem(null)}>
-                Close
-              </button>
-            </div>
-
-            <div className={styles.modalForm}>
-              <section className={styles.section}>
-                <h3 className={styles.sectionTitle}>Basic Info</h3>
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label>Name</label>
-                    <input type="text" value={selectedItem.itemName || "—"} readOnly />
+                <div className={styles["card-body"]}>
+                  <div className={styles["card-info-row"]}>
+                    <span className={styles["info-label"]}>ID:</span>
+                    <span className={styles["info-value"]}>{item.itemId}</span>
                   </div>
-                  <div className={styles.formGroup}>
-                    <label>HSN</label>
-                    <input type="text" value={selectedItem.itemHsn || "—"} readOnly />
+                  <div className={styles["card-info-row"]}>
+                    <span className={styles["info-label"]}>HSN:</span>
+                    <span className={styles["info-value"]}>{item.itemHsn || "—"}</span>
                   </div>
-                  <div className={styles.formGroup}>
-                    <label>Code</label>
-                    <input type="text" value={selectedItem.itemCode || "—"} readOnly />
+                  <div className={styles["card-info-row"]}>
+                    <span className={styles["info-label"]}>Code:</span>
+                    <span className={styles["info-value"]}>{item.itemCode || "—"}</span>
                   </div>
-                  <div className={styles.formGroup}>
-                    <label>Type</label>
-                    <input type="text" value={selectedItem.itemType || "—"} readOnly />
-                  </div>
-                  <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                    <label>Description</label>
-                    <textarea value={selectedItem.description || "—"} readOnly rows={2} />
-                  </div>
-                </div>
-              </section>
-
-              <section className={styles.section}>
-                <h3 className={styles.sectionTitle}>Pricing & Tax</h3>
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label>Sale Price</label>
-                    <input type="text" value={`₹${selectedItem.salePrice || "0"}`} readOnly />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Sale Tax Type</label>
-                    <input type="text" value={selectedItem.saleTaxType || "—"} readOnly />
+                  <div className={styles["card-info-row"]}>
+                    <span className={styles["info-label"]}>Sale Price:</span>
+                    <span className={styles["info-value-amount"]}>₹{item.salePrice || "0"}</span>
                   </div>
                   {showProducts && (
                     <>
-                      <div className={styles.formGroup}>
-                        <label>Purchase Price</label>
-                        <input type="text" value={`₹${selectedItem.purchasePrice || "0"}`} readOnly />
+                      <div className={styles["card-info-row"]}>
+                        <span className={styles["info-label"]}>Purchase Price:</span>
+                        <span className={styles["info-value"]}>₹{item.purchasePrice || "0"}</span>
                       </div>
-                      <div className={styles.formGroup}>
-                        <label>Purchase Tax Type</label>
-                        <input type="text" value={selectedItem.purchaseTaxType || "—"} readOnly />
+                      <div className={styles["card-info-row"]}>
+                        <span className={styles["info-label"]}>Stock:</span>
+                        <span className={styles["info-value"]}>{item.stockOpeningQty || "0"}</span>
                       </div>
                     </>
                   )}
-                  <div className={styles.formGroup}>
-                    <label>Tax Rate</label>
-                    <input type="text" value={selectedItem.taxRate || "—"} readOnly />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Discount</label>
-                    <input type="text" value={`${selectedItem.saleDiscountPrice || "0"} (${selectedItem.saleDiscountType || "—"})`} readOnly />
-                  </div>
                 </div>
-              </section>
 
-              {showProducts && (
-                <section className={styles.section}>
-                  <h3 className={styles.sectionTitle}>Stock</h3>
-                  <div className={styles.formGrid}>
-                    <div className={styles.formGroup}>
-                      <label>Opening Qty</label>
-                      <input type="text" value={selectedItem.stockOpeningQty || "0"} readOnly />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Stock Price</label>
-                      <input type="text" value={`₹${selectedItem.stockPrice || "0"}`} readOnly />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Stock Date</label>
-                      <input
-                        type="text"
-                        value={
-                          selectedItem.stockOpeningDate
-                            ? new Date(selectedItem.stockOpeningDate).toLocaleDateString()
-                            : "—"
-                        }
-                        readOnly
-                      />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Min Stock</label>
-                      <input type="text" value={selectedItem.minimumStockToMaintain || "0"} readOnly />
-                    </div>
-                    <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                      <label>Location</label>
-                      <input type="text" value={selectedItem.openingStockLocation || "—"} readOnly />
-                    </div>
-                  </div>
-                </section>
-              )}
-
-              <section className={styles.section}>
-                <h3 className={styles.sectionTitle}>Units</h3>
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label>Base Unit</label>
-                    <input type="text" value={selectedItem.baseUnit || "—"} readOnly />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Secondary Unit</label>
-                    <input type="text" value={selectedItem.secondaryUnit || "—"} readOnly />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Conversion</label>
-                    <input type="text" value={selectedItem.baseUnitToSecondaryUnit || "—"} readOnly />
-                  </div>
+                <div className={styles["card-footer"]}>
+                  <button
+                    onClick={() => setSelectedItem(item)}
+                    className={styles["card-view-button"]}
+                  >
+                    <Eye size={16} />
+                    View Details
+                  </button>
                 </div>
-              </section>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        !loading && (
+          <div className={styles["no-data"]}>
+            <Package size={48} />
+            <p>No {showProducts ? "products" : "services"} found</p>
+            <p className={styles["no-data-subtitle"]}>
+              {searchTerm
+                ? "Try adjusting your search"
+                : `Click "Add ${showProducts ? "Product" : "Service"}" to create one.`}
+            </p>
+          </div>
+        )
+      )}
+
+      {/* VIEW MODAL */}
+      {selectedItem && (
+        <div className={styles["modal-overlay"]} onClick={() => setSelectedItem(null)}>
+          <div className={styles["detail-card"]} onClick={(e) => e.stopPropagation()}>
+            <div className={styles["card-header"]}>
+              <div className={styles["header-title-section"]}>
+                <h3>Item #{selectedItem.itemId}</h3>
+                <div className={styles["balance-badge"]}>
+                  {selectedItem.itemType === "PRODUCT" ? (
+                    <>
+                      <Package size={16} />
+                      Product
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={16} />
+                      Service
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className={styles["header-actions"]}>
+                <button
+                  onClick={() => handleEditItem(selectedItem)}
+                  className={`${styles["action-button"]} ${styles["edit-button"]}`}
+                  title="Edit item"
+                >
+                  <Edit2 size={16} />
+                  <span>Edit</span>
+                </button>
+                <button
+                  onClick={() => handleDeleteItem(selectedItem.itemId)}
+                  className={`${styles["action-button"]} ${styles["delete-button"]}`}
+                  title="Delete item"
+                >
+                  <Trash2 size={16} />
+                  <span>Delete</span>
+                </button>
+                <button
+                  className={styles["close-modal-btn"]}
+                  onClick={() => setSelectedItem(null)}
+                  title="Close"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
+
+            {/* Basic Info */}
+            <section className={styles["card-section"]}>
+              <h4 className={styles["section-title"]}>Basic Info</h4>
+              <div className={styles["detail-grid"]}>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Name:</span>
+                  <span className={styles["detail-value"]}>{selectedItem.itemName || "—"}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>HSN:</span>
+                  <span className={styles["detail-value"]}>{selectedItem.itemHsn || "—"}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Code:</span>
+                  <span className={styles["detail-value"]}>{selectedItem.itemCode || "—"}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Type:</span>
+                  <span className={styles["detail-value"]}>{selectedItem.itemType}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Description:</span>
+                  <span className={styles["detail-value"]}>{selectedItem.description || "—"}</span>
+                </div>
+              </div>
+            </section>
+
+            {/* Pricing & Tax */}
+            <section className={styles["card-section"]}>
+              <h4 className={styles["section-title"]}>Pricing & Tax</h4>
+              <div className={styles["detail-grid"]}>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Sale Price:</span>
+                  <span className={styles["detail-value"]}>₹{selectedItem.salePrice || "0"}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Sale Tax Type:</span>
+                  <span className={styles["detail-value"]}>{selectedItem.saleTaxType || "—"}</span>
+                </div>
+                {showProducts && (
+                  <>
+                    <div className={styles["detail-item"]}>
+                      <span className={styles["detail-label"]}>Purchase Price:</span>
+                      <span className={styles["detail-value"]}>₹{selectedItem.purchasePrice || "0"}</span>
+                    </div>
+                    <div className={styles["detail-item"]}>
+                      <span className={styles["detail-label"]}>Purchase Tax Type:</span>
+                      <span className={styles["detail-value"]}>{selectedItem.purchaseTaxType || "—"}</span>
+                    </div>
+                  </>
+                )}
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Tax Rate:</span>
+                  <span className={styles["detail-value"]}>{selectedItem.taxRate || "—"}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Discount:</span>
+                  <span className={styles["detail-value"]}>
+                    {selectedItem.saleDiscountPrice || "0"} ({selectedItem.saleDiscountType || "—"})
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {/* Stock (Products only) */}
+            {showProducts && (
+              <section className={styles["card-section"]}>
+                <h4 className={styles["section-title"]}>Stock</h4>
+                <div className={styles["detail-grid"]}>
+                  <div className={styles["detail-item"]}>
+                    <span className={styles["detail-label"]}>Opening Qty:</span>
+                    <span className={styles["detail-value"]}>{selectedItem.stockOpeningQty || "0"}</span>
+                  </div>
+                  <div className={styles["detail-item"]}>
+                    <span className={styles["detail-label"]}>Stock Price:</span>
+                    <span className={styles["detail-value"]}>₹{selectedItem.stockPrice || "0"}</span>
+                  </div>
+                  <div className={styles["detail-item"]}>
+                    <span className={styles["detail-label"]}>Stock Date:</span>
+                    <span className={styles["detail-value"]}>
+                      {selectedItem.stockOpeningDate
+                        ? new Date(selectedItem.stockOpeningDate).toLocaleDateString()
+                        : "—"}
+                    </span>
+                  </div>
+                  <div className={styles["detail-item"]}>
+                    <span className={styles["detail-label"]}>Min Stock:</span>
+                    <span className={styles["detail-value"]}>{selectedItem.minimumStockToMaintain || "0"}</span>
+                  </div>
+                  <div className={styles["detail-item"]}>
+                    <span className={styles["detail-label"]}>Location:</span>
+                    <span className={styles["detail-value"]}>{selectedItem.openingStockLocation || "—"}</span>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Units */}
+            <section className={styles["card-section"]}>
+              <h4 className={styles["section-title"]}>Units</h4>
+              <div className={styles["detail-grid"]}>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Base Unit:</span>
+                  <span className={styles["detail-value"]}>{selectedItem.baseUnit || "—"}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Secondary Unit:</span>
+                  <span className={styles["detail-value"]}>{selectedItem.secondaryUnit || "—"}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Conversion:</span>
+                  <span className={styles["detail-value"]}>{selectedItem.baseUnitToSecondaryUnit || "—"}</span>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       )}

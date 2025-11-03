@@ -135,9 +135,9 @@ const Navbar = () => {
 
       {/* Right: Icons + User */}
       <div className={styles.right}>
-        <button className={styles.iconBtn} aria-label="Notifications">
+        {/* <button className={styles.iconBtn} aria-label="Notifications">
           <Bell className={styles.icon} />
-        </button>
+        </button> */}
 
         <div className={styles.dropdown} ref={dropdownRef}>
           <button
