@@ -383,7 +383,7 @@ const AdminDashboard = () => {
           </div>
 
           <div className={styles.chartCard}>
-            <h3 className={styles.chartTitle}>Sales by Category</h3>
+            <h3 className={styles.chartTitle}>Sales by Items</h3>
             <div className={styles.chartContainer}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={categoryData}>
