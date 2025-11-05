@@ -338,6 +338,7 @@ const SalesList = () => {
                 </div>
               </div>
               <div className={styles["header-actions"]}>
+                
                 <button
                   onClick={() => handleEdit(selectedSale.saleId)}
                   className={`${styles["action-button"]} ${styles["edit-button"]}`}

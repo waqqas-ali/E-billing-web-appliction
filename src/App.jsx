@@ -13,6 +13,7 @@ import Register from "./pages/auth/register/Register";
 import Parties from "./pages/admin/parties/Parties";
 import Add_Parties from "./pages/admin/parties/Add_Parties";
 import Sales from "./pages/admin/sales/Sales";
+import ConvertSale from "./pages/admin/sales/ConvertSale";
 import SalesHistory from "./pages/admin/sales/SalesHistory";
 import SalesReturns from "./pages/admin/sales/SalesReturns";
 import CreateReturns from "./pages/admin/sales/CreateReturns";
@@ -20,6 +21,7 @@ import CreateSaleOrder from "./pages/admin/sales/CreateSaleOrder";
 import CreateSale from "./pages/admin/sales/CreateSale";
 import Createpurchase from "./pages/admin/Purchase/Createpurchase";
 import New_purchase from "./pages/admin/Purchase/New_purchase";
+import Convert_purchase from "./pages/admin/Purchase/Convert_purchase"
 import Purchase_order from "./pages/admin/Purchase/Purchase_order";
 import Create_purchase_order from "./pages/admin/Purchase/Create_purchase_order";
 import Purchase_return from "./pages/admin/Purchase/Purchase_return";
@@ -72,6 +74,7 @@ const App = () => {
             <Route path="Add-parties" element={<Add_Parties />} />
 
             <Route path="sales" element={<Sales />} />
+            <Route path="convert-sale" element={<ConvertSale />} />
             <Route path="sales_history" element={< SalesHistory/>} />
             <Route path="sales_returns" element={<SalesReturns />} />
             <Route path="create-sale-order" element={<CreateSaleOrder />} />
@@ -79,6 +82,7 @@ const App = () => {
             <Route path="create-returns" element={<CreateReturns />} />
 
             <Route path="new_purchase" element={<New_purchase />} />  
+            <Route path="convert_purchase" element={<Convert_purchase />} />
             <Route path="createpurchase" element={<Createpurchase />} />
             <Route path="purchase_order" element={<Purchase_order />} />
             <Route path="create_purchase_order" element={<Create_purchase_order />} />
