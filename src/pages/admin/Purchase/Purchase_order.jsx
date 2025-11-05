@@ -1002,7 +1002,8 @@ const PurchaseOrderList = () => {
 
             // Optional: Navigate to new purchase if ID is returned
             if (convertRes.data?.purchaseId) {
-                navigate(`/new_purchase/${convertRes.data.purchaseId}`);
+                // navigate(`/new_purchase/${convertRes.data.purchaseId}`);
+                setSelectedOrder(null);
             } else {
                 fetchPurchaseOrders();
                 setSelectedOrder(null);
