@@ -273,15 +273,291 @@
 
 
 
+// // src/pages/Parties.jsx
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import axios from "axios";
+// import config from "../../../config/apiconfig";
+// import {
+//   Search, Plus, Edit, Trash2, Mail, Phone, MapPin, Home, Package, AlertCircle, Loader2
+// } from "lucide-react";
+// import styles from "./Parties.module.css";
+
+// const Parties = () => {
+//   const navigate = useNavigate();
+//   const ebillingData = JSON.parse(localStorage.getItem("eBilling")) || {};
+//   const companyId = ebillingData?.selectedCompany?.id;
+//   const token = ebillingData?.accessToken;
+
+//   const [parties, setParties] = useState([]);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
+
+//   const fetchParties = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const response = await axios.get(
+//         `${config.BASE_URL}/company/${companyId}/parties`,
+//         { headers: { Authorization: `Bearer ${token}` } }
+//       );
+//       setParties(response.data);
+//     } catch (err) {
+//       setError(err.response?.data?.message || "Failed to load parties.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (!token || !companyId) {
+//       navigate("/Add-parties");
+//       return;
+//     }
+//     fetchParties();
+//   }, [token, companyId, navigate]);
+
+//   const handleEdit = (party) => {
+//     navigate("/Add-parties", { state: { party, companyId, token } });
+//   };
+
+//   const handleDelete = async (partyId) => {
+//     if (!window.confirm("Delete this party?")) return;
+//     setLoading(true);
+//     try {
+//       await axios.delete(`${config.BASE_URL}/party/${partyId}`, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+//       fetchParties();
+//     } catch (err) {
+//       setError(err.response?.data?.message || "Failed to delete.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const filteredParties = parties.filter((p) =>
+//     [p.name, p.gstin, p.emailId, p.phoneNo]
+//       .filter(Boolean)
+//       .some((f) => f.toLowerCase().includes(searchTerm.toLowerCase()))
+//   );
+
+//   return (
+//     <div className={styles.container}>
+//       {/* Header */}
+//       <div className={styles.header}>
+//         <div>
+//           <h1 className={styles.title}>Parties</h1>
+//           <p className={styles.subtitle}>Manage your business contacts</p>
+//         </div>
+//         <button
+//           onClick={() => navigate("/Add-parties", { state: { companyId, token } })}
+//           className={styles.createBtn}
+//           disabled={loading}
+//         >
+//           <Plus size={18} />
+//           Create Party
+//         </button>
+//       </div>
+
+//       {/* Search */}
+//       <div className={styles.searchWrapper}>
+//         <Search className={styles.searchIcon} size={18} />
+//         <input
+//           type="text"
+//           placeholder="Search by name, GST, email, phone..."
+//           value={searchTerm}
+//           onChange={(e) => setSearchTerm(e.target.value)}
+//           className={styles.searchInput}
+//           disabled={loading}
+//         />
+//       </div>
+
+//       {/* Loading */}
+//       {loading && (
+//         <div className={styles.loading}>
+//           <Loader2 className={styles.spinner} size={40} />
+//           <p>Loading parties...</p>
+//         </div>
+//       )}
+
+//       {/* Error */}
+//       {error && (
+//         <div className={styles.error}>
+//           <AlertCircle size={18} />
+//           {error}
+//         </div>
+//       )}
+
+//       {/* Empty State */}
+//       {!loading && !error && filteredParties.length === 0 && (
+//         <div className={styles.empty}>
+//           <div className={styles.emptyIcon}>Inbox</div>
+//           <p>No parties found</p>
+//           <p className={styles.emptySub}>Click "Create Party" to add one</p>
+//         </div>
+//       )}
+
+//       {/* Desktop Table */}
+//       {!loading && !error && filteredParties.length > 0 && (
+//         <>
+//           <div className={styles.tableContainer}>
+//             <table className={styles.table}>
+//               <thead>
+//                 <tr>
+//                   <th>Name</th>
+//                   <th>GST No</th>
+//                   <th>Type</th>
+//                   <th>Phone</th>
+//                   <th>State</th>
+//                   <th>Email</th>
+//                   <th>Billing</th>
+//                   <th>Shipping</th>
+//                   <th>Actions</th>
+//                 </tr>
+//               </thead>
+//               <tbody>
+//                 {filteredParties.map((p) => (
+//                   <tr key={p.partyId}>
+//                     <td className={styles.nameCell}>{p.name || "—"}</td>
+//                     <td>{p.gstin || "—"}</td>
+//                     <td>{formatEnum(p.gstType)}</td>
+//                     <td>{p.phoneNo || "—"}</td>
+//                     <td>{formatEnum(p.state)}</td>
+//                     <td>
+//                       {p.emailId ? (
+//                         <a href={`mailto:${p.emailId}`} className={styles.link}>
+//                           {p.emailId}
+//                         </a>
+//                       ) : "—"}
+//                     </td>
+//                     <td className={styles.addressCell}>{p.billingAddress || "—"}</td>
+//                     <td className={styles.addressCell}>{p.shipingAddress || "—"}</td>
+//                     <td className={styles.actionsCell}>
+//                       <button
+//                         onClick={() => handleEdit(p)}
+//                         className={styles.editBtn}
+//                         disabled={loading}
+//                         aria-label="Edit"
+//                       >
+//                         <Edit size={16} />
+//                       </button>
+//                       <button
+//                         onClick={() => handleDelete(p.partyId)}
+//                         className={styles.deleteBtn}
+//                         disabled={loading}
+//                         aria-label="Delete"
+//                       >
+//                         <Trash2 size={16} />
+//                       </button>
+//                     </td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </table>
+//           </div>
+
+//           {/* Mobile Cards */}
+//           <div className={styles.cards}>
+//             {filteredParties.map((p) => (
+//               <div key={p.partyId} className={styles.card}>
+//                 <div className={styles.cardHeader}>
+//                   <h3 className={styles.cardTitle}>{p.name || "Unnamed"}</h3>
+//                   <span className={styles.cardBadge}>{formatEnum(p.gstType)}</span>
+//                 </div>
+//                 <div className={styles.cardBody}>
+//                   {p.gstin && (
+//                     <div className={styles.cardRow}>
+//                       <Package size={16} />
+//                       <span>{p.gstin}</span>
+//                     </div>
+//                   )}
+//                   {p.phoneNo && (
+//                     <div className={styles.cardRow}>
+//                       <Phone size={16} />
+//                       <span>{p.phoneNo}</span>
+//                     </div>
+//                   )}
+//                   {p.state && (
+//                     <div className={styles.cardRow}>
+//                       <MapPin size={16} />
+//                       <span>{formatEnum(p.state)}</span>
+//                     </div>
+//                   )}
+//                   {p.emailId && (
+//                     <div className={styles.cardRow}>
+//                       <Mail size={16} />
+//                       <a href={`mailto:${p.emailId}`} className={styles.link}>
+//                         {p.emailId}
+//                       </a>
+//                     </div>
+//                   )}
+//                   {p.billingAddress && (
+//                     <div className={styles.cardRow}>
+//                       <Home size={16} />
+//                       <span>{p.billingAddress}</span>
+//                     </div>
+//                   )}
+//                 </div>
+//                 <div className={styles.cardFooter}>
+//                   <button onClick={() => handleEdit(p)} className={styles.cardEdit}>
+//                     <Edit size={16} /> Edit
+//                   </button>
+//                   <button onClick={() => handleDelete(p.partyId)} className={styles.cardDelete}>
+//                     <Trash2 size={16} /> Delete
+//                   </button>
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+//         </>
+//       )}
+//     </div>
+//   );
+// };
+
+// const formatEnum = (val) =>
+//   val
+//     ? val
+//         .replace(/_/g, " ")
+//         .toLowerCase()
+//         .replace(/\b\w/g, (c) => c.toUpperCase())
+//     : "—";
+
+// export default Parties;
+
+
+
+
+
+
 // src/pages/Parties.jsx
-import { useState, useEffect } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import config from "../../../config/apiconfig";
 import {
-  Search, Plus, Edit, Trash2, Mail, Phone, MapPin, Home, Package, AlertCircle, Loader2
+  Search,
+  Plus,
+  Edit2,
+  Trash2,
+  Eye,
+  X,
+  Package,
+  AlertCircle,
+  CheckCircle,
+  Loader,
+  Mail,
+  Phone,
+  MapPin,
+  Home,
+  Building,
+  ChevronDown, // <-- ADDED HERE
 } from "lucide-react";
-import styles from "./Parties.module.css";
+import styles from "../Styles/ScreenUI.module.css";
 
 const Parties = () => {
   const navigate = useNavigate();
@@ -293,7 +569,11 @@ const Parties = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedParty, setSelectedParty] = useState(null);
 
+  /* ------------------------------------------------------------------ */
+  /* -------------------------- API LOGIC ---------------------------- */
+  /* ------------------------------------------------------------------ */
   const fetchParties = async () => {
     setLoading(true);
     setError(null);
@@ -343,66 +623,71 @@ const Parties = () => {
       .some((f) => f.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const formatEnum = (val) =>
+    val
+      ? val
+          .replace(/_/g, " ")
+          .toLowerCase()
+          .replace(/\b\w/g, (c) => c.toUpperCase())
+      : "—";
+
+  /* ------------------------------------------------------------------ */
+  /* --------------------------- RENDER ------------------------------- */
+  /* ------------------------------------------------------------------ */
   return (
-    <div className={styles.container}>
-      {/* Header */}
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Parties</h1>
-          <p className={styles.subtitle}>Manage your business contacts</p>
+    <div className={styles["company-form-container"]}>
+      {/* ==================== HEADER ==================== */}
+      <div className={styles["form-header"]}>
+        <div className={styles["header-content"]}>
+          <div className={styles["header-text"]}>
+            <h1 className={styles["company-form-title"]}>Parties</h1>
+            <p className={styles["form-subtitle"]}>Manage your business contacts</p>
+          </div>
         </div>
         <button
           onClick={() => navigate("/Add-parties", { state: { companyId, token } })}
-          className={styles.createBtn}
+          className={styles["submit-button"]}
           disabled={loading}
         >
           <Plus size={18} />
-          Create Party
+          <span>Create Party</span>
         </button>
       </div>
 
-      {/* Search */}
-      <div className={styles.searchWrapper}>
-        <Search className={styles.searchIcon} size={18} />
+      {/* ==================== SEARCH ==================== */}
+      <div className={styles["search-container"]}>
+        <Search size={18} className={styles["search-icon"]} />
         <input
           type="text"
           placeholder="Search by name, GST, email, phone..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className={styles.searchInput}
+          className={styles["search-input"]}
           disabled={loading}
         />
       </div>
 
-      {/* Loading */}
+      {/* ==================== LOADING ==================== */}
       {loading && (
-        <div className={styles.loading}>
-          <Loader2 className={styles.spinner} size={40} />
+        <div className={styles["loading-message"]}>
+          <Loader size={32} className={styles["spinner"]} />
           <p>Loading parties...</p>
         </div>
       )}
 
-      {/* Error */}
+      {/* ==================== ERROR ==================== */}
       {error && (
-        <div className={styles.error}>
+        <div className={styles["error"]}>
           <AlertCircle size={18} />
           {error}
         </div>
       )}
 
-      {/* Empty State */}
-      {!loading && !error && filteredParties.length === 0 && (
-        <div className={styles.empty}>
-          <div className={styles.emptyIcon}>Inbox</div>
-          <p>No parties found</p>
-          <p className={styles.emptySub}>Click "Create Party" to add one</p>
-        </div>
-      )}
-
-      {/* Desktop Table */}
-      {!loading && !error && filteredParties.length > 0 && (
+      {/* ==================== TABLE / CARDS ==================== */}
+      {filteredParties.length > 0 ? (
         <>
-          <div className={styles.tableContainer}>
+          {/* ---------- Desktop Table ---------- */}
+          <div className={styles["table-wrapper"]}>
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -414,13 +699,13 @@ const Parties = () => {
                   <th>Email</th>
                   <th>Billing</th>
                   <th>Shipping</th>
-                  <th>Actions</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredParties.map((p) => (
-                  <tr key={p.partyId}>
-                    <td className={styles.nameCell}>{p.name || "—"}</td>
+                  <tr key={p.partyId} className={styles["table-row"]}>
+                    <td className={styles["nameCell"]}>{p.name || "—"}</td>
                     <td>{p.gstin || "—"}</td>
                     <td>{formatEnum(p.gstType)}</td>
                     <td>{p.phoneNo || "—"}</td>
@@ -432,24 +717,16 @@ const Parties = () => {
                         </a>
                       ) : "—"}
                     </td>
-                    <td className={styles.addressCell}>{p.billingAddress || "—"}</td>
-                    <td className={styles.addressCell}>{p.shipingAddress || "—"}</td>
-                    <td className={styles.actionsCell}>
+                    <td className={styles["addressCell"]}>{p.billingAddress || "—"}</td>
+                    <td className={styles["addressCell"]}>{p.shipingAddress || "—"}</td>
+                    <td className={styles["actions-cell"]}>
                       <button
-                        onClick={() => handleEdit(p)}
-                        className={styles.editBtn}
-                        disabled={loading}
-                        aria-label="Edit"
+                        onClick={() => setSelectedParty(p)}
+                        className={`${styles["action-button"]} ${styles["view-button"]}`}
+                        title="View details"
                       >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(p.partyId)}
-                        className={styles.deleteBtn}
-                        disabled={loading}
-                        aria-label="Delete"
-                      >
-                        <Trash2 size={16} />
+                        <Eye size={16} />
+                        <span>View</span>
                       </button>
                     </td>
                   </tr>
@@ -458,71 +735,169 @@ const Parties = () => {
             </table>
           </div>
 
-          {/* Mobile Cards */}
-          <div className={styles.cards}>
+          {/* ---------- Mobile Cards ---------- */}
+          <div className={styles["mobile-cards-container"]}>
             {filteredParties.map((p) => (
-              <div key={p.partyId} className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <h3 className={styles.cardTitle}>{p.name || "Unnamed"}</h3>
-                  <span className={styles.cardBadge}>{formatEnum(p.gstType)}</span>
+              <div key={p.partyId} className={styles["invoice-card"]}>
+                <div className={styles["card-header-mobile"]}>
+                  <div className={styles["card-title-section"]}>
+                    <h3 className={styles["card-invoice-number"]}>{p.name || "Unnamed"}</h3>
+                    <span className={styles["status-badge-paid"]}>{formatEnum(p.gstType)}</span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedParty(p)}
+                    className={styles["card-action-button"]}
+                  >
+                    <ChevronDown size={20} /> {/* NOW WORKS */}
+                  </button>
                 </div>
-                <div className={styles.cardBody}>
+
+                <div className={styles["card-body"]}>
                   {p.gstin && (
-                    <div className={styles.cardRow}>
-                      <Package size={16} />
-                      <span>{p.gstin}</span>
+                    <div className={styles["card-info-row"]}>
+                      <span className={styles["info-label"]}>GSTIN:</span>
+                      <span className={styles["info-value"]}>{p.gstin}</span>
                     </div>
                   )}
                   {p.phoneNo && (
-                    <div className={styles.cardRow}>
-                      <Phone size={16} />
-                      <span>{p.phoneNo}</span>
+                    <div className={styles["card-info-row"]}>
+                      <span className={styles["info-label"]}>Phone:</span>
+                      <span className={styles["info-value"]}>{p.phoneNo}</span>
                     </div>
                   )}
                   {p.state && (
-                    <div className={styles.cardRow}>
-                      <MapPin size={16} />
-                      <span>{formatEnum(p.state)}</span>
+                    <div className={styles["card-info-row"]}>
+                      <span className={styles["info-label"]}>State:</span>
+                      <span className={styles["info-value"]}>{formatEnum(p.state)}</span>
                     </div>
                   )}
                   {p.emailId && (
-                    <div className={styles.cardRow}>
-                      <Mail size={16} />
+                    <div className={styles["card-info-row"]}>
+                      <span className={styles["info-label"]}>Email:</span>
                       <a href={`mailto:${p.emailId}`} className={styles.link}>
                         {p.emailId}
                       </a>
                     </div>
                   )}
-                  {p.billingAddress && (
-                    <div className={styles.cardRow}>
-                      <Home size={16} />
-                      <span>{p.billingAddress}</span>
-                    </div>
-                  )}
                 </div>
-                <div className={styles.cardFooter}>
-                  <button onClick={() => handleEdit(p)} className={styles.cardEdit}>
-                    <Edit size={16} /> Edit
-                  </button>
-                  <button onClick={() => handleDelete(p.partyId)} className={styles.cardDelete}>
-                    <Trash2 size={16} /> Delete
+
+                <div className={styles["card-footer"]}>
+                  <button
+                    onClick={() => setSelectedParty(p)}
+                    className={styles["card-view-button"]}
+                  >
+                    <Eye size={16} />
+                    View Details
                   </button>
                 </div>
               </div>
             ))}
           </div>
         </>
+      ) : (
+        /* ==================== EMPTY STATE ==================== */
+        !loading && (
+          <div className={styles["no-data"]}>
+            <Package size={48} />
+            <p>No parties found</p>
+            <p className={styles["no-data-subtitle"]}>
+              {searchTerm ? "Try adjusting your search criteria" : 'Click "Create Party" to add one.'}
+            </p>
+          </div>
+        )
+      )}
+
+      {/* ==================== VIEW MODAL ==================== */}
+      {selectedParty && (
+        <div className={styles["modal-overlay"]} onClick={() => setSelectedParty(null)}>
+          <div className={styles["detail-card"]} onClick={(e) => e.stopPropagation()}>
+            <div className={styles["card-header"]}>
+              <div className={styles["header-title-section"]}>
+                <h3>Party #{selectedParty.partyId}</h3>
+                <div className={styles["balance-badge"]}>
+                  <CheckCircle size={16} />
+                  Active
+                </div>
+              </div>
+
+              <div className={styles["header-actions"]}>
+                <button
+                  onClick={() => handleEdit(selectedParty)}
+                  className={`${styles["action-button"]} ${styles["edit-button"]}`}
+                  title="Edit party"
+                >
+                  <Edit2 size={16} />
+                  <span>Edit</span>
+                </button>
+
+                <button
+                  onClick={() => handleDelete(selectedParty.partyId)}
+                  className={`${styles["action-button"]} ${styles["delete-button"]}`}
+                  title="Delete party"
+                >
+                  <Trash2 size={16} />
+                  <span>Delete</span>
+                </button>
+
+                <button
+                  className={styles["close-modal-btn"]}
+                  onClick={() => setSelectedParty(null)}
+                  title="Close"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* ---------- Party Details ---------- */}
+            <section className={styles["card-section"]}>
+              <h4 className={styles["section-title"]}>Party Information</h4>
+              <div className={styles["detail-grid"]}>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Name:</span>
+                  <span className={styles["detail-value"]}>{selectedParty.name || "—"}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>GSTIN:</span>
+                  <span className={styles["detail-value"]}>{selectedParty.gstin || "—"}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>GST Type:</span>
+                  <span className={styles["detail-value"]}>{formatEnum(selectedParty.gstType)}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Phone:</span>
+                  <span className={styles["detail-value"]}>{selectedParty.phoneNo || "—"}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Email:</span>
+                  <span className={styles["detail-value"]}>
+                    {selectedParty.emailId ? (
+                      <a href={`mailto:${selectedParty.emailId}`} className={styles.link}>
+                        {selectedParty.emailId}
+                      </a>
+                    ) : "—"}
+                  </span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>State:</span>
+                  <span className={styles["detail-value"]}>{formatEnum(selectedParty.state)}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Billing Address:</span>
+                  <span className={styles["detail-value"]}>{selectedParty.billingAddress || "—"}</span>
+                </div>
+                <div className={styles["detail-item"]}>
+                  <span className={styles["detail-label"]}>Shipping Address:</span>
+                  <span className={styles["detail-value"]}>{selectedParty.shipingAddress || "—"}</span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
       )}
     </div>
   );
 };
-
-const formatEnum = (val) =>
-  val
-    ? val
-        .replace(/_/g, " ")
-        .toLowerCase()
-        .replace(/\b\w/g, (c) => c.toUpperCase())
-    : "—";
 
 export default Parties;

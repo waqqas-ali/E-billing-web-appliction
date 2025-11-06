@@ -19,6 +19,7 @@ import {
   ChevronDown,
   Search,
   Loader,
+  Printer,
 } from "lucide-react"
 
 const SalesList = () => {
@@ -338,7 +339,16 @@ const SalesList = () => {
                 </div>
               </div>
               <div className={styles["header-actions"]}>
-                
+
+                <button
+                  onClick={() => window.print()}
+                  className={`${styles["action-button"]} ${styles["print-button"] || styles["edit-button"]}`}
+                  title="Print invoice"
+                >
+                  <Printer size={16} />
+                  <span>Print</span>
+                </button>
+
                 <button
                   onClick={() => handleEdit(selectedSale.saleId)}
                   className={`${styles["action-button"]} ${styles["edit-button"]}`}
@@ -436,9 +446,8 @@ const SalesList = () => {
                   <span>₹{selectedSale.receivedAmount}</span>
                 </div>
                 <div
-                  className={`${styles["breakdown-row"]} ${
-                    selectedSale.balance > 0 ? styles["balance-row-pending"] : styles["balance-row-paid"]
-                  }`}
+                  className={`${styles["breakdown-row"]} ${selectedSale.balance > 0 ? styles["balance-row-pending"] : styles["balance-row-paid"]
+                    }`}
                 >
                   <span>Balance:</span>
                   <span className={styles["balance-amount"]}>
