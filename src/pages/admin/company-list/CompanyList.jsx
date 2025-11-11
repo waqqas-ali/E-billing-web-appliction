@@ -4,6 +4,7 @@ import axios from "axios"
 import { useEffect, useState } from "react"
 import config from "../../../config/apiconfig"
 import { useNavigate } from "react-router-dom"
+import { Plus, Eye, Edit2, LogIn, Trash2, Search, X, Mail, Phone, MapPin, Building2, FileText, Map } from "lucide-react"
 import styles from "./CompanyList.module.css"
 
 function CompanyList() {
@@ -68,6 +69,7 @@ function CompanyList() {
       name: company.bussinessName,
     }
     localStorage.setItem("eBilling", JSON.stringify(eBilling))
+    console.log("Selected Company:", eBilling.selectedCompany)
     navigate("/")
   }
 
@@ -98,7 +100,7 @@ function CompanyList() {
           <p className={styles["subtitle"]}>Manage and organize your business accounts</p>
         </div>
         <button onClick={handleCreate} className={styles["create-button"]} disabled={loading}>
-          <i className="fas fa-plus-circle"></i>
+          <Plus size={20} />
           <span>Create Company</span>
         </button>
       </div>
@@ -106,7 +108,7 @@ function CompanyList() {
       {/* Search Section */}
       <div className={styles["search-section"]}>
         <div className={styles["search-box"]}>
-          <i className="fas fa-search"></i>
+          <Search size={18} className={styles["search-icon"]} />
           <input
             type="search"
             placeholder="Search by name, email, or phone..."
@@ -132,7 +134,7 @@ function CompanyList() {
       {/* Empty State */}
       {!loading && companies.length === 0 && !error && (
         <div className={styles["no-data-message"]}>
-          <i className="fas fa-inbox"></i>
+          <Building2 size={56} />
           <p>No companies found</p>
           <p className={styles["no-data-subtitle"]}>Click "Create Company" to add one!</p>
         </div>
@@ -178,25 +180,26 @@ function CompanyList() {
                     <div className={styles["contact-info"]}>
                       {company.emailId && (
                         <div className={styles["contact-item"]}>
-                          <i className="fas fa-envelope"></i>
+                          <Mail size={16} />
                           <a href={`mailto:${company.emailId}`}>{company.emailId}</a>
                         </div>
                       )}
                       {company.phoneNo && (
                         <div className={styles["contact-item"]}>
-                          <i className="fas fa-phone"></i>
+                          <Phone size={16} />
                           <a href={`tel:${company.phoneNo}`}>{company.phoneNo}</a>
                         </div>
                       )}
                     </div>
                   </td>
                   <td className={styles["action-buttons"]}>
+                    <div className={styles["actions-label"]}>
                     <button
                       onClick={() => handleView(company)}
                       className={`${styles["action-button"]} ${styles["view-button"]}`}
                       title="View Details"
                     >
-                      <i className="fas fa-eye"></i>
+                      <Eye size={16} />
                       <span>View</span>
                     </button>
                     <button
@@ -204,7 +207,7 @@ function CompanyList() {
                       className={`${styles["action-button"]} ${styles["edit-button"]}`}
                       title="Edit Company"
                     >
-                      <i className="fas fa-edit"></i>
+                      <Edit2 size={16} />
                       <span>Edit</span>
                     </button>
                     <button
@@ -212,7 +215,7 @@ function CompanyList() {
                       className={`${styles["action-button"]} ${styles["open-button"]}`}
                       title="Open Dashboard"
                     >
-                      <i className="fas fa-arrow-right"></i>
+                      <LogIn size={16} />
                       <span>Open</span>
                     </button>
                     <button
@@ -220,9 +223,10 @@ function CompanyList() {
                       className={`${styles["action-button"]} ${styles["delete-button"]}`}
                       title="Delete Company"
                     >
-                      <i className="fas fa-trash-alt"></i>
+                      <Trash2 size={16} />
                       <span>Delete</span>
                     </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -260,19 +264,19 @@ function CompanyList() {
               <div className={styles["card-content"]}>
                 {company.emailId && (
                   <div className={styles["card-detail"]}>
-                    <i className="fas fa-envelope"></i>
+                    <Mail size={18} />
                     <a href={`mailto:${company.emailId}`}>{company.emailId}</a>
                   </div>
                 )}
                 {company.phoneNo && (
                   <div className={styles["card-detail"]}>
-                    <i className="fas fa-phone"></i>
+                    <Phone size={18} />
                     <a href={`tel:${company.phoneNo}`}>{company.phoneNo}</a>
                   </div>
                 )}
                 {company.address && (
                   <div className={styles["card-detail"]}>
-                    <i className="fas fa-map-marker-alt"></i>
+                    <MapPin size={18} />
                     <span>{company.address}</span>
                   </div>
                 )}
@@ -283,28 +287,28 @@ function CompanyList() {
                   onClick={() => handleView(company)}
                   className={`${styles["card-action-button"]} ${styles["view-button"]}`}
                 >
-                  <i className="fas fa-eye"></i>
+                  <Eye size={18} />
                   View
                 </button>
                 <button
                   onClick={() => handleEditClick(company)}
                   className={`${styles["card-action-button"]} ${styles["edit-button"]}`}
                 >
-                  <i className="fas fa-edit"></i>
+                  <Edit2 size={18} />
                   Edit
                 </button>
                 <button
                   onClick={() => handleOpen(company)}
                   className={`${styles["card-action-button"]} ${styles["open-button"]}`}
                 >
-                  <i className="fas fa-arrow-right"></i>
+                  <LogIn size={18} />
                   Open
                 </button>
                 <button
                   onClick={() => handleDelete(company.companyId)}
                   className={`${styles["card-action-button"]} ${styles["delete-button"]}`}
                 >
-                  <i className="fas fa-trash-alt"></i>
+                  <Trash2 size={18} />
                   Delete
                 </button>
               </div>
@@ -320,7 +324,7 @@ function CompanyList() {
             <div className={styles["popup-header"]}>
               <h3 className={styles["popup-title"]}>{selectedCompany.bussinessName}</h3>
               <button onClick={handleClosePopup} className={styles["popup-close-button"]} aria-label="Close">
-                <i className="fas fa-times"></i>
+                <X size={24} />
               </button>
             </div>
 
@@ -337,7 +341,10 @@ function CompanyList() {
 
               <div className={styles["popup-details"]}>
                 <div className={styles["detail-row"]}>
-                  <span className={styles["detail-label"]}>Business Type:</span>
+                  <span className={styles["detail-label"]}>
+                    <Building2 size={16} />
+                    Business Type:
+                  </span>
                   <span className={styles["detail-value"]}>
                     {selectedCompany.bussinessType
                       ? selectedCompany.bussinessType
@@ -349,32 +356,50 @@ function CompanyList() {
                 </div>
 
                 <div className={styles["detail-row"]}>
-                  <span className={styles["detail-label"]}>Email:</span>
+                  <span className={styles["detail-label"]}>
+                    <Mail size={16} />
+                    Email:
+                  </span>
                   <span className={styles["detail-value"]}>{selectedCompany.emailId || "N/A"}</span>
                 </div>
 
                 <div className={styles["detail-row"]}>
-                  <span className={styles["detail-label"]}>Phone:</span>
+                  <span className={styles["detail-label"]}>
+                    <Phone size={16} />
+                    Phone:
+                  </span>
                   <span className={styles["detail-value"]}>{selectedCompany.phoneNo || "N/A"}</span>
                 </div>
 
                 <div className={styles["detail-row"]}>
-                  <span className={styles["detail-label"]}>Address:</span>
+                  <span className={styles["detail-label"]}>
+                    <MapPin size={16} />
+                    Address:
+                  </span>
                   <span className={styles["detail-value"]}>{selectedCompany.address || "N/A"}</span>
                 </div>
 
                 <div className={styles["detail-row"]}>
-                  <span className={styles["detail-label"]}>GSTIN:</span>
+                  <span className={styles["detail-label"]}>
+                    <FileText size={16} />
+                    GSTIN:
+                  </span>
                   <span className={styles["detail-value"]}>{selectedCompany.gstin || "N/A"}</span>
                 </div>
 
                 <div className={styles["detail-row"]}>
-                  <span className={styles["detail-label"]}>Category:</span>
+                  <span className={styles["detail-label"]}>
+                    <Building2 size={16} />
+                    Category:
+                  </span>
                   <span className={styles["detail-value"]}>{selectedCompany.bussinessCategory || "N/A"}</span>
                 </div>
 
                 <div className={styles["detail-row"]}>
-                  <span className={styles["detail-label"]}>State:</span>
+                  <span className={styles["detail-label"]}>
+                    <Map size={16} />
+                    State:
+                  </span>
                   <span className={styles["detail-value"]}>
                     {selectedCompany.state
                       ? selectedCompany.state
@@ -418,7 +443,7 @@ function CompanyList() {
 
             <div className={styles["popup-footer"]}>
               <button onClick={handleClosePopup} className={styles["popup-action-button"]}>
-                <i className="fas fa-times"></i>
+                <X size={18} />
                 Close
               </button>
             </div>
