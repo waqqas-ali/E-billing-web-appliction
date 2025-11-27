@@ -24,7 +24,7 @@ import Purchase_order from "./pages/admin/Purchase/Purchase_order";
 import Create_purchase_order from "./pages/admin/Purchase/Create_purchase_order";
 import Purchase_return from "./pages/admin/Purchase/Purchase_return";
 import Create_purchase_return from "./pages/admin/Purchase/Create_purchase_return";
-import Delivery from "./pages/admin/Delivery/Delivery";
+import Delivery from "./pages/admin/delivery/Delivery";
 import Create_delivery from "./pages/admin/delivery/Create_delivery";
 import Expense from "./pages/admin/expense/Expense";
 import Create_expense from "./pages/admin/expense/Create_expense";
