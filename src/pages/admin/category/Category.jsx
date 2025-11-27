@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import config from "../../../config/apiconfig";
 import { toast } from "react-toastify";
-import "./Category.module.css";
+import "./Category.css";
 
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
