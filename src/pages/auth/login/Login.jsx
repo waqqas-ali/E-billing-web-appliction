@@ -233,9 +233,9 @@ const Login = () => {
 
             <div className={styles.signupText}>
               Not registered?{" "}
-              <Link to="/register" className={styles.signupLink}>
+              {/* <Link to="/register" className={styles.signupLink}>
                 Create account
-              </Link>
+              </Link> */}
             </div>
           </div>
         </div>
