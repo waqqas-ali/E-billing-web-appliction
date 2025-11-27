@@ -4,7 +4,7 @@ import { ArrowLeft, User, Mail, Lock } from 'lucide-react'; // Removed Eye/EyeOf
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import config from '../../../config/apiconfig';
-import styles from './register.module.css';
+import styles from './Register.module.css';
 import Input from '../../../components/ui/Input/Input';
 import Button from '../../../components/ui/Button/Button';
 

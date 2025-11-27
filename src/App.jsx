@@ -9,7 +9,7 @@ import { ToastContainer } from "react-toastify";
 import AdminLayout from "./layouts/adminlayout/AdminLayout";
 import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
 import Login from "./pages/auth/login/Login";
-import Register from "./pages/auth/register/Register";
+// import Register from "./pages/auth/register/Register";
 import Parties from "./pages/admin/parties/Parties";
 import Add_Parties from "./pages/admin/parties/Add_Parties";
 import Sales from "./pages/admin/sales/Sales";
@@ -57,7 +57,7 @@ const App = () => {
       <Routes>
         {/* ================= Public Routes ================= */}
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* <Route path="/register" element={<Register />} /> */}
         <Route path="/subscription-plans" element={<SubscriptionPlans />} />
         <Route path="/company-list" element={<CompanyList />} />
         <Route path="/create-company" element={<CreateCompany />} />

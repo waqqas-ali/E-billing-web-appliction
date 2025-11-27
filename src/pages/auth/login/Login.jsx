@@ -4,7 +4,7 @@ import { Mail, Lock } from "lucide-react";
 import axios from "axios";
 import config from "../../../config/apiconfig";
 import { toast } from "react-toastify";
-import styles from "./login.module.css";
+import styles from "./Login.module.css";
 import Input from "../../../components/ui/Input/Input";
 import Button from "../../../components/ui/Button/Button";
 
