@@ -1113,12 +1113,640 @@
 
 
 
-import React, { useEffect, useState, useCallback } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
-import axios from "axios"
-import config from "../../../config/apiconfig"
-import styles from "../Styles/Form.module.css"
-import { toast } from "react-toastify"
+// import React, { useEffect, useState, useCallback } from "react"
+// import { useNavigate, useLocation } from "react-router-dom"
+// import axios from "axios"
+// import config from "../../../config/apiconfig"
+// import styles from "../Styles/Form.module.css"
+// import { toast } from "react-toastify"
+// import {
+//   ArrowLeft,
+//   CheckCircle,
+//   Calendar,
+//   FileText,
+//   Loader,
+//   Package,
+//   Plus,
+//   Trash2,
+//   IndianRupee,
+//   Tag,
+// } from "lucide-react"
+
+// const PAYMENT_TYPES = [
+//   "CASH",
+//   "UPI",
+//   "CREDIT_CARD",
+//   "DEBIT_CARD",
+//   "NET_BANKING",
+//   "WALLET",
+//   "CHEQUE",
+//   "OTHER",
+// ]
+
+// const fetchExpenseItems = async (companyId, token) => {
+//   const res = await axios.get(
+//     `${config.BASE_URL}/company/${companyId}/expense-item/list`,
+//     {
+//       headers: { Authorization: `Bearer ${token}` },
+//     }
+//   )
+//   return res.data || []
+// }
+
+// const CreateExpense = () => {
+//   const navigate = useNavigate()
+//   const location = useLocation()
+//   const queryParams = new URLSearchParams(location.search)
+//   const editId = queryParams.get("edit")
+
+//   const userData = JSON.parse(localStorage.getItem("eBilling") || "{}")
+//   const token = userData?.accessToken || ""
+//   const companyId = userData?.selectedCompany?.id || ""
+
+//   const [loading, setLoading] = useState(false)
+//   const [loadingData, setLoadingData] = useState(false)
+//   const [categories, setCategories] = useState([])
+//   const [expenseItemsCatalog, setExpenseItemsCatalog] = useState([])
+
+//   const [form, setForm] = useState({
+//     expenseCategoryId: "",
+//     expenseDate: new Date().toISOString().split("T")[0],
+//     paymentType: "CASH",
+//     description: "",
+//     items: [
+//       {
+//         expenseItemId: null,
+//         itemName: "",
+//         quantity: "",
+//         perItemRate: "",
+//         totalAmount: 0,
+//         priceTaxType: "WITHTAX",
+//         taxRate: "NONE",
+//       },
+//     ],
+//     totalAmount: 0,
+//   })
+
+//   /* ==================== FETCH DATA ==================== */
+//   const fetchCategories = async () => {
+//     if (!token || !companyId) return
+//     try {
+//       const res = await axios.get(
+//         `${config.BASE_URL}/company/${companyId}/expenses-categories`,
+//         {
+//           headers: { Authorization: `Bearer ${token}` },
+//         }
+//       )
+//       setCategories(res.data || [])
+//     } catch (err) {
+//       toast.error("Failed to load categories")
+//     }
+//   }
+
+//   const loadCatalog = useCallback(async () => {
+//     if (!token || !companyId) return
+//     try {
+//       const catalog = await fetchExpenseItems(companyId, token)
+//       setExpenseItemsCatalog(catalog)
+//     } catch (err) {
+//       toast.error("Failed to load expense item catalog")
+//     }
+//   }, [token, companyId])
+
+//   const fetchExpense = async (id) => {
+//     if (!token) return
+//     setLoadingData(true)
+//     try {
+//       const res = await axios.get(`${config.BASE_URL}/expense/${id}`, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       })
+//       const e = res.data
+
+//       setForm({
+//         expenseCategoryId: e.expenseCategoryId?.toString() || "",
+//         expenseDate: e.expenseDate?.split("T")[0] || "",
+//         paymentType: e.paymentType || "CASH",
+//         description: e.description || "",
+//         items:
+//           e.addExpenseItemResponses?.map((it) => ({
+//             expenseItemId: it.expenseItemId || null,
+//             itemName: it.itemName || "",
+//             quantity: it.quantity?.toString() || "",
+//             perItemRate: it.perItemRate?.toString() || "",
+//             totalAmount: it.totalAmount || 0,
+//             priceTaxType: it.priceTaxType || "WITHTAX",
+//             taxRate: it.taxRate || "NONE",
+//           })) || [],
+//         totalAmount: e.totalAmount || 0,
+//       })
+//     } catch (err) {
+//       toast.error(err.response?.data?.message || "Failed to load expense")
+//       navigate("/expense")
+//     } finally {
+//       setLoadingData(false)
+//     }
+//   }
+
+//   useEffect(() => {
+//     if (token && companyId) {
+//       fetchCategories()
+//       loadCatalog()
+//       if (editId) fetchExpense(editId)
+//     }
+//   }, [token, companyId, editId, loadCatalog])
+
+//   /* ==================== CALCULATIONS ==================== */
+//   const calculateItem = (item) => {
+//     const qty = parseFloat(item.quantity) || 0
+//     let rate = parseFloat(item.perItemRate) || 0
+
+//     if (item.priceTaxType === "WITHTAX" && item.taxRate && item.taxRate !== "NONE") {
+//       const taxPercent = parseFloat(item.taxRate) || 0
+//       rate = rate * (1 + taxPercent / 100)
+//     }
+
+//     const total = qty * rate
+//     return { ...item, totalAmount: parseFloat(total.toFixed(2)) }
+//   }
+
+//   const recalculateTotals = (items) => {
+//     const calculated = items.map(calculateItem)
+//     const grandTotal = calculated.reduce((sum, i) => sum + i.totalAmount, 0)
+//     setForm((prev) => ({
+//       ...prev,
+//       items: calculated,
+//       totalAmount: parseFloat(grandTotal.toFixed(2)),
+//     }))
+//   }
+
+//   const handleItemChange = (index, field, value) => {
+//     const newItems = [...form.items]
+//     newItems[index][field] = value
+
+//     if (field === "itemName" && value === "") {
+//       newItems[index].expenseItemId = null
+//     }
+//     recalculateTotals(newItems)
+//   }
+
+//   const handleCatalogSelect = (index, catalogItem) => {
+//     const newItems = [...form.items]
+//     newItems[index] = {
+//       ...newItems[index],
+//       expenseItemId: catalogItem.expenseItemId,
+//       itemName: catalogItem.name,
+//       perItemRate: catalogItem.price.toString(),
+//       priceTaxType: catalogItem.priceTaxType,
+//       taxRate: catalogItem.taxRate,
+//     }
+//     recalculateTotals(newItems)
+//   }
+
+//   const addItem = () => {
+//     setForm((prev) => ({
+//       ...prev,
+//       items: [
+//         ...prev.items,
+//         {
+//           expenseItemId: null,
+//           itemName: "",
+//           quantity: "",
+//           perItemRate: "",
+//           totalAmount: 0,
+//           priceTaxType: "WITHTAX",
+//           taxRate: "NONE",
+//         },
+//       ],
+//     }))
+//   }
+
+//   const removeItem = (index) => {
+//     const newItems = form.items.filter((_, i) => i !== index)
+//     recalculateTotals(newItems)
+//   }
+
+//   /* ==================== SUBMIT ==================== */
+//   const handleSubmit = async (e) => {
+//     e.preventDefault()
+
+//     if (!token || !companyId) {
+//       toast.error("Please login and select a company")
+//       return
+//     }
+
+//     if (!form.expenseCategoryId || !form.expenseDate) {
+//       toast.error("Category and Date are required")
+//       return
+//     }
+
+//     const invalidItem = form.items.some(
+//       (i) =>
+//         !i.itemName ||
+//         !i.quantity ||
+//         !i.perItemRate ||
+//         parseFloat(i.quantity) <= 0 ||
+//         parseFloat(i.perItemRate) <= 0
+//     )
+//     if (invalidItem) {
+//       toast.error("Each item must have Name, Quantity > 0, Rate > 0")
+//       return
+//     }
+
+//     const payload = {
+//       expenseCategoryId: parseInt(form.expenseCategoryId),
+//       expenseDate: form.expenseDate,
+//       paymentType: form.paymentType,
+//       description: form.description.trim() || null,
+//       totalAmount: form.totalAmount,
+//       addExpenseItems: form.items.map((i) => ({
+//         expenseItemId: i.expenseItemId || null,
+//         itemName: i.itemName.trim(),
+//         quantity: parseFloat(i.quantity),
+//         perItemRate: parseFloat(i.perItemRate),
+//         totalAmount: i.totalAmount,
+//       })),
+//     }
+
+//     try {
+//       setLoading(true)
+
+//       if (editId) {
+//         await axios.put(`${config.BASE_URL}/expense/${editId}`, payload, {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//             "Content-Type": "application/json",
+//           },
+//         })
+//         toast.success("Expense updated successfully!")
+//       } else {
+//         await axios.post(
+//           `${config.BASE_URL}/company/${companyId}/create-expense`,
+//           payload,
+//           {
+//             headers: {
+//               Authorization: `Bearer ${token}`,
+//               "Content-Type": "application/json",
+//             },
+//           }
+//         )
+//         toast.success("Expense created successfully!")
+//       }
+
+//       navigate("/expense")
+//     } catch (err) {
+//       toast.error(
+//         err.response?.data?.message ||
+//           `Failed to ${editId ? "update" : "create"} expense`
+//       )
+//     } finally {
+//       setLoading(false)
+//     }
+//   }
+
+//   const isEditMode = !!editId
+
+//   return (
+//     <div className={styles.container}>
+//       {loadingData ? (
+//         <div className={styles.loadingContainer}>
+//           <Loader className={styles.spinnerIcon} />
+//           <p>Loading expense data...</p>
+//         </div>
+//       ) : (
+//         <form onSubmit={handleSubmit} className={styles.form}>
+//           {/* Header */}
+//           <div className={styles.header}>
+//             <div className={styles.headerContent}>
+//               <div className={styles.titleSection}>
+//                 <h1 className={styles.title}>
+//                   {isEditMode ? (
+//                     <>
+//                       <FileText className={styles.titleIcon} />
+//                       Edit Expense
+//                     </>
+//                   ) : (
+//                     <>
+//                       <IndianRupee className={styles.titleIcon} />
+//                       Create Expense
+//                     </>
+//                   )}
+//                 </h1>
+//                 <p className={styles.subtitle}>
+//                   {isEditMode ? `Expense #${editId}` : "Record a new business expense"}
+//                 </p>
+//               </div>
+//             </div>
+//             <div className={styles.headerActions}>
+//               <button
+//                 type="button"
+//                 onClick={() => navigate("/expense")}
+//                 className={styles.buttonSecondary}
+//                 disabled={loading || loadingData}
+//               >
+//                 <ArrowLeft size={18} />
+//                 Back
+//               </button>
+//               <button
+//                 type="submit"
+//                 className={styles.buttonPrimary}
+//                 disabled={loading || loadingData}
+//               >
+//                 {loading ? (
+//                   <>
+//                     <Loader size={18} className={styles.spinnerSmall} />
+//                     Saving...
+//                   </>
+//                 ) : (
+//                   <>
+//                     <CheckCircle size={18} />
+//                     {isEditMode ? "Update Expense" : "Create Expense"}
+//                   </>
+//                 )}
+//               </button>
+//             </div>
+//           </div>
+
+//           {/* Category & Date */}
+//           <div className={styles.formSection}>
+//             <h2 className={styles.sectionTitle}>
+//               <Tag size={20} />
+//               Category & Date
+//             </h2>
+//             <div className={styles.formGrid}>
+//               <div className={styles.formGroup}>
+//                 <label htmlFor="category" className={styles.label}>
+//                   Category <span className={styles.required}>*</span>
+//                 </label>
+//                 <select
+//                   id="category"
+//                   value={form.expenseCategoryId}
+//                   onChange={(e) =>
+//                     setForm({ ...form, expenseCategoryId: e.target.value })
+//                   }
+//                   required
+//                   className={styles.input}
+//                   disabled={!token || !companyId}
+//                 >
+//                   <option value="">Select Category</option>
+//                   {categories.map((cat) => (
+//                     <option
+//                       key={cat.expensesCategoryId}
+//                       value={cat.expensesCategoryId}
+//                     >
+//                       {cat.categoryName}
+//                     </option>
+//                   ))}
+//                 </select>
+//               </div>
+
+//               <div className={styles.formGroup}>
+//                 <label htmlFor="expenseDate" className={styles.label}>
+//                   Expense Date <span className={styles.required}>*</span>
+//                 </label>
+//                 <input
+//                   id="expenseDate"
+//                   type="date"
+//                   value={form.expenseDate}
+//                   onChange={(e) =>
+//                     setForm({ ...form, expenseDate: e.target.value })
+//                   }
+//                   required
+//                   className={styles.input}
+//                   disabled={!token || !companyId}
+//                 />
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* Payment Type */}
+//           <div className={styles.formSection}>
+//             <h2 className={styles.sectionTitle}>
+//               <IndianRupee size={20} />
+//               Payment Type
+//             </h2>
+//             <div className={styles.formGrid}>
+//               <div className={styles.formGroup}>
+//                 <label htmlFor="paymentType" className={styles.label}>
+//                   Payment Type
+//                 </label>
+//                 <select
+//                   id="paymentType"
+//                   value={form.paymentType}
+//                   onChange={(e) =>
+//                     setForm({ ...form, paymentType: e.target.value })
+//                   }
+//                   className={styles.input}
+//                   disabled={!token || !companyId}
+//                 >
+//                   {PAYMENT_TYPES.map((type) => (
+//                     <option key={type} value={type}>
+//                       {type.replace(/_/g, " ")}
+//                     </option>
+//                   ))}
+//                 </select>
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* Description */}
+//           <div className={styles.formSection}>
+//             <div className={styles.formGroup}>
+//               <label htmlFor="description" className={styles.label}>
+//                 Description (optional)
+//               </label>
+//               <textarea
+//                 id="description"
+//                 value={form.description}
+//                 onChange={(e) =>
+//                   setForm({ ...form, description: e.target.value })
+//                 }
+//                 className={`${styles.input} ${styles.textarea}`}
+//                 placeholder="Optional notes..."
+//                 rows={3}
+//                 disabled={!token || !companyId}
+//               />
+//             </div>
+//           </div>
+
+//           {/* Items Section */}
+//           <div className={styles.formSection}>
+//             <div className={styles.itemsHeader}>
+//               <h2 className={styles.sectionTitle}>
+//                 <Package size={20} />
+//                 Expense Items
+//               </h2>
+//               <button
+//                 type="button"
+//                 onClick={addItem}
+//                 className={styles.buttonAdd}
+//                 disabled={!token || !companyId}
+//               >
+//                 <Plus size={18} />
+//                 Add Item
+//               </button>
+//             </div>
+
+//             <div className={styles.itemsList}>
+//               {form.items.map((item, index) => (
+//                 <div key={index} className={styles.itemCard}>
+//                   <div className={styles.itemHeader}>
+//                     <span className={styles.itemNumber}>Item {index + 1}</span>
+//                     {form.items.length > 1 && (
+//                       <button
+//                         type="button"
+//                         onClick={() => removeItem(index)}
+//                         className={styles.buttonDelete}
+//                         aria-label="Remove item"
+//                       >
+//                         <Trash2 size={18} />
+//                       </button>
+//                     )}
+//                   </div>
+
+//                   {/* Catalog + Custom Name */}
+//                   <div className={styles.formGroup}>
+//                     <label className={styles.label}>
+//                       Item <span className={styles.required}>*</span>
+//                     </label>
+
+//                     {/* Catalog Dropdown */}
+//                     <select
+//                       value={item.expenseItemId ?? ""}
+//                       onChange={(e) => {
+//                         const val = e.target.value
+//                         if (val === "-1") {
+//                           handleItemChange(index, "expenseItemId", null)
+//                           handleItemChange(index, "itemName", "")
+//                           handleItemChange(index, "perItemRate", "")
+//                         } else {
+//                           const selected = expenseItemsCatalog.find(
+//                             (c) => c.expenseItemId === Number(val)
+//                           )
+//                           if (selected) handleCatalogSelect(index, selected)
+//                         }
+//                       }}
+//                       className={styles.input}
+//                       style={{ marginBottom: "8px" }}
+//                     >
+//                       <option value="">-- Select from catalog --</option>
+//                       {expenseItemsCatalog.map((cat) => (
+//                         <option
+//                           key={cat.expenseItemId}
+//                           value={cat.expenseItemId}
+//                         >
+//                           {cat.name} (₹{cat.price}
+//                           {cat.priceTaxType === "WITHTAX" &&
+//                           cat.taxRate !== "NONE"
+//                             ? ` + ${cat.taxRate}% tax`
+//                             : ""}
+//                           )
+//                         </option>
+//                       ))}
+//                       <option value={-1}>[Custom Item]</option>
+//                     </select>
+
+//                     {/* Custom Name */}
+//                     <input
+//                       type="text"
+//                       value={item.itemName}
+//                       onChange={(e) =>
+//                         handleItemChange(index, "itemName", e.target.value)
+//                       }
+//                       required
+//                       className={styles.input}
+//                       placeholder="Enter custom item name"
+//                       disabled={!!item.expenseItemId}
+//                     />
+//                   </div>
+
+//                   {/* Quantity, Rate, Total */}
+//                   <div className={styles.itemGrid}>
+//                     <div className={styles.formGroup}>
+//                       <label className={styles.label}>
+//                         Quantity <span className={styles.required}>*</span>
+//                       </label>
+//                       <input
+//                         type="number"
+//                         step="0.01"
+//                         min="0.01"
+//                         value={item.quantity}
+//                         onChange={(e) =>
+//                           handleItemChange(index, "quantity", e.target.value)
+//                         }
+//                         required
+//                         className={styles.input}
+//                       />
+//                     </div>
+
+//                     <div className={styles.formGroup}>
+//                       <label className={styles.label}>
+//                         Rate/Unit <span className={styles.required}>*</span>
+//                       </label>
+//                       <input
+//                         type="number"
+//                         step="0.01"
+//                         min="0.01"
+//                         value={item.perItemRate}
+//                         onChange={(e) =>
+//                           handleItemChange(index, "perItemRate", e.target.value)
+//                         }
+//                         required
+//                         className={styles.input}
+//                         disabled={!!item.expenseItemId}
+//                       />
+//                     </div>
+
+//                     <div className={styles.formGroup}>
+//                       <label className={styles.label}>Total</label>
+//                       <div className={styles.valueDisplayTotal}>
+//                         <IndianRupee size={16} />
+//                         <span>{item.totalAmount.toFixed(2)}</span>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+//               ))}
+//             </div>
+//           </div>
+
+//           {/* Summary */}
+//           <div className={styles.summarySection}>
+//             <h2 className={styles.sectionTitle}>Expense Summary</h2>
+//             <div className={styles.summaryGrid}>
+//               <div className={styles.summaryItem}>
+//                 <span className={styles.summaryLabel}>Grand Total</span>
+//                 <span className={`${styles.summaryValue} ${styles.summaryValueBold}`}>
+//                   <IndianRupee size={14} />
+//                   {form.totalAmount.toFixed(2)}
+//                 </span>
+//               </div>
+//             </div>
+//           </div>
+//         </form>
+//       )}
+//     </div>
+//   )
+// }
+
+// export default CreateExpense
+
+
+
+
+
+
+
+
+
+
+
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import api from "../../../utils/axiosInstance"; // Shared API with interceptors
+import { toast } from "react-toastify";
+import styles from "../Styles/Form.module.css";
 import {
   ArrowLeft,
   CheckCircle,
@@ -1130,7 +1758,8 @@ import {
   Trash2,
   IndianRupee,
   Tag,
-} from "lucide-react"
+  Phone,
+} from "lucide-react";
 
 const PAYMENT_TYPES = [
   "CASH",
@@ -1141,32 +1770,30 @@ const PAYMENT_TYPES = [
   "WALLET",
   "CHEQUE",
   "OTHER",
-]
+];
 
-const fetchExpenseItems = async (companyId, token) => {
-  const res = await axios.get(
-    `${config.BASE_URL}/company/${companyId}/expense-item/list`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  )
-  return res.data || []
-}
+const fetchExpenseItems = async (companyId) => {
+  const res = await api.get(`/company/${companyId}/expense-item/list`);
+  return res.data || [];
+};
 
 const CreateExpense = () => {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const queryParams = new URLSearchParams(location.search)
-  const editId = queryParams.get("edit")
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const editId = queryParams.get("edit");
 
-  const userData = JSON.parse(localStorage.getItem("eBilling") || "{}")
-  const token = userData?.accessToken || ""
-  const companyId = userData?.selectedCompany?.id || ""
+  const [userData, setUserData] = useState(
+    JSON.parse(localStorage.getItem("eBilling") || "{}")
+  );
 
-  const [loading, setLoading] = useState(false)
-  const [loadingData, setLoadingData] = useState(false)
-  const [categories, setCategories] = useState([])
-  const [expenseItemsCatalog, setExpenseItemsCatalog] = useState([])
+  const token = userData?.accessToken;
+  const companyId = userData?.selectedCompany?.id;
+
+  const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [expenseItemsCatalog, setExpenseItemsCatalog] = useState([]);
 
   const [form, setForm] = useState({
     expenseCategoryId: "",
@@ -1185,42 +1812,57 @@ const CreateExpense = () => {
       },
     ],
     totalAmount: 0,
-  })
+  });
+
+  // Sync userData
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const updated = JSON.parse(localStorage.getItem("eBilling") || "{}");
+      setUserData(updated);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  // Auth check
+  useEffect(() => {
+    if (!token) {
+      toast.info("Please log in to continue.");
+      navigate("/login");
+      return;
+    }
+    if (!companyId) {
+      toast.info("Please select a company first.");
+      navigate("/company-list");
+      return;
+    }
+  }, [token, companyId, navigate]);
 
   /* ==================== FETCH DATA ==================== */
   const fetchCategories = async () => {
-    if (!token || !companyId) return
     try {
-      const res = await axios.get(
-        `${config.BASE_URL}/company/${companyId}/expenses-categories`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-      setCategories(res.data || [])
+      const res = await api.get(`/company/${companyId}/expenses-categories`);
+      setCategories(res.data || []);
     } catch (err) {
-      toast.error("Failed to load categories")
+      toast.error("Failed to load categories");
     }
-  }
+  };
 
   const loadCatalog = useCallback(async () => {
-    if (!token || !companyId) return
     try {
-      const catalog = await fetchExpenseItems(companyId, token)
-      setExpenseItemsCatalog(catalog)
+      const catalog = await fetchExpenseItems(companyId);
+      setExpenseItemsCatalog(catalog);
     } catch (err) {
-      toast.error("Failed to load expense item catalog")
+      toast.error("Failed to load expense item catalog");
     }
-  }, [token, companyId])
+  }, [companyId]);
 
   const fetchExpense = async (id) => {
-    if (!token) return
-    setLoadingData(true)
+    setLoadingData(true);
     try {
-      const res = await axios.get(`${config.BASE_URL}/expense/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const e = res.data
+      const res = await api.get(`/expense/${id}`);
+      const e = res.data;
 
       setForm({
         expenseCategoryId: e.expenseCategoryId?.toString() || "",
@@ -1238,59 +1880,59 @@ const CreateExpense = () => {
             taxRate: it.taxRate || "NONE",
           })) || [],
         totalAmount: e.totalAmount || 0,
-      })
+      });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to load expense")
-      navigate("/expense")
+      toast.error(err.response?.data?.message || "Failed to load expense");
+      navigate("/expense");
     } finally {
-      setLoadingData(false)
+      setLoadingData(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (token && companyId) {
-      fetchCategories()
-      loadCatalog()
-      if (editId) fetchExpense(editId)
+      fetchCategories();
+      loadCatalog();
+      if (editId) fetchExpense(editId);
     }
-  }, [token, companyId, editId, loadCatalog])
+  }, [token, companyId, editId, loadCatalog]);
 
   /* ==================== CALCULATIONS ==================== */
   const calculateItem = (item) => {
-    const qty = parseFloat(item.quantity) || 0
-    let rate = parseFloat(item.perItemRate) || 0
+    const qty = parseFloat(item.quantity) || 0;
+    let rate = parseFloat(item.perItemRate) || 0;
 
     if (item.priceTaxType === "WITHTAX" && item.taxRate && item.taxRate !== "NONE") {
-      const taxPercent = parseFloat(item.taxRate) || 0
-      rate = rate * (1 + taxPercent / 100)
+      const taxPercent = parseFloat(item.taxRate) || 0;
+      rate = rate * (1 + taxPercent / 100);
     }
 
-    const total = qty * rate
-    return { ...item, totalAmount: parseFloat(total.toFixed(2)) }
-  }
+    const total = qty * rate;
+    return { ...item, totalAmount: parseFloat(total.toFixed(2)) };
+  };
 
   const recalculateTotals = (items) => {
-    const calculated = items.map(calculateItem)
-    const grandTotal = calculated.reduce((sum, i) => sum + i.totalAmount, 0)
+    const calculated = items.map(calculateItem);
+    const grandTotal = calculated.reduce((sum, i) => sum + i.totalAmount, 0);
     setForm((prev) => ({
       ...prev,
       items: calculated,
       totalAmount: parseFloat(grandTotal.toFixed(2)),
-    }))
-  }
+    }));
+  };
 
   const handleItemChange = (index, field, value) => {
-    const newItems = [...form.items]
-    newItems[index][field] = value
+    const newItems = [...form.items];
+    newItems[index][field] = value;
 
     if (field === "itemName" && value === "") {
-      newItems[index].expenseItemId = null
+      newItems[index].expenseItemId = null;
     }
-    recalculateTotals(newItems)
-  }
+    recalculateTotals(newItems);
+  };
 
   const handleCatalogSelect = (index, catalogItem) => {
-    const newItems = [...form.items]
+    const newItems = [...form.items];
     newItems[index] = {
       ...newItems[index],
       expenseItemId: catalogItem.expenseItemId,
@@ -1298,9 +1940,9 @@ const CreateExpense = () => {
       perItemRate: catalogItem.price.toString(),
       priceTaxType: catalogItem.priceTaxType,
       taxRate: catalogItem.taxRate,
-    }
-    recalculateTotals(newItems)
-  }
+    };
+    recalculateTotals(newItems);
+  };
 
   const addItem = () => {
     setForm((prev) => ({
@@ -1317,26 +1959,21 @@ const CreateExpense = () => {
           taxRate: "NONE",
         },
       ],
-    }))
-  }
+    }));
+  };
 
   const removeItem = (index) => {
-    const newItems = form.items.filter((_, i) => i !== index)
-    recalculateTotals(newItems)
-  }
+    const newItems = form.items.filter((_, i) => i !== index);
+    recalculateTotals(newItems);
+  };
 
   /* ==================== SUBMIT ==================== */
   const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    if (!token || !companyId) {
-      toast.error("Please login and select a company")
-      return
-    }
+    e.preventDefault();
 
     if (!form.expenseCategoryId || !form.expenseDate) {
-      toast.error("Category and Date are required")
-      return
+      toast.error("Category and Date are required");
+      return;
     }
 
     const invalidItem = form.items.some(
@@ -1346,10 +1983,10 @@ const CreateExpense = () => {
         !i.perItemRate ||
         parseFloat(i.quantity) <= 0 ||
         parseFloat(i.perItemRate) <= 0
-    )
+    );
     if (invalidItem) {
-      toast.error("Each item must have Name, Quantity > 0, Rate > 0")
-      return
+      toast.error("Each item must have Name, Quantity > 0, Rate > 0");
+      return;
     }
 
     const payload = {
@@ -1365,45 +2002,31 @@ const CreateExpense = () => {
         perItemRate: parseFloat(i.perItemRate),
         totalAmount: i.totalAmount,
       })),
-    }
+    };
 
     try {
-      setLoading(true)
+      setLoading(true);
 
       if (editId) {
-        await axios.put(`${config.BASE_URL}/expense/${editId}`, payload, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
-        toast.success("Expense updated successfully!")
+        await api.put(`/expense/${editId}`, payload);
+        toast.success("Expense updated successfully!");
       } else {
-        await axios.post(
-          `${config.BASE_URL}/company/${companyId}/create-expense`,
-          payload,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        )
-        toast.success("Expense created successfully!")
+        await api.post(`/company/${companyId}/create-expense`, payload);
+        toast.success("Expense created successfully!");
       }
 
-      navigate("/expense")
+      navigate("/expense");
     } catch (err) {
       toast.error(
         err.response?.data?.message ||
           `Failed to ${editId ? "update" : "create"} expense`
-      )
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const isEditMode = !!editId
+  const isEditMode = !!editId;
 
   return (
     <div className={styles.container}>
@@ -1485,7 +2108,6 @@ const CreateExpense = () => {
                   }
                   required
                   className={styles.input}
-                  disabled={!token || !companyId}
                 >
                   <option value="">Select Category</option>
                   {categories.map((cat) => (
@@ -1512,7 +2134,6 @@ const CreateExpense = () => {
                   }
                   required
                   className={styles.input}
-                  disabled={!token || !companyId}
                 />
               </div>
             </div>
@@ -1536,7 +2157,6 @@ const CreateExpense = () => {
                     setForm({ ...form, paymentType: e.target.value })
                   }
                   className={styles.input}
-                  disabled={!token || !companyId}
                 >
                   {PAYMENT_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -1563,7 +2183,6 @@ const CreateExpense = () => {
                 className={`${styles.input} ${styles.textarea}`}
                 placeholder="Optional notes..."
                 rows={3}
-                disabled={!token || !companyId}
               />
             </div>
           </div>
@@ -1579,7 +2198,6 @@ const CreateExpense = () => {
                 type="button"
                 onClick={addItem}
                 className={styles.buttonAdd}
-                disabled={!token || !companyId}
               >
                 <Plus size={18} />
                 Add Item
@@ -1613,16 +2231,16 @@ const CreateExpense = () => {
                     <select
                       value={item.expenseItemId ?? ""}
                       onChange={(e) => {
-                        const val = e.target.value
+                        const val = e.target.value;
                         if (val === "-1") {
-                          handleItemChange(index, "expenseItemId", null)
-                          handleItemChange(index, "itemName", "")
-                          handleItemChange(index, "perItemRate", "")
+                          handleItemChange(index, "expenseItemId", null);
+                          handleItemChange(index, "itemName", "");
+                          handleItemChange(index, "perItemRate", "");
                         } else {
                           const selected = expenseItemsCatalog.find(
                             (c) => c.expenseItemId === Number(val)
-                          )
-                          if (selected) handleCatalogSelect(index, selected)
+                          );
+                          if (selected) handleCatalogSelect(index, selected);
                         }
                       }}
                       className={styles.input}
@@ -1725,7 +2343,7 @@ const CreateExpense = () => {
         </form>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default CreateExpense
+export default CreateExpense;

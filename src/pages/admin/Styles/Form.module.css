@@ -609,3 +609,106 @@
     align-self: flex-start;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.tableContainer {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  margin-top: 1rem;
+}
+
+.itemsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.itemsTable th {
+  background-color: #f8fafc;
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.itemsTable td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.rowNumber {
+  font-weight: 600;
+  color: #64748b;
+  text-align: center;
+  width: 40px;
+}
+
+.tableInput,
+.tableSelect {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.tableInputReadonly {
+  background: #f1f5f9;
+  color: #64748b;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.tableSelect {
+  height: 38px;
+}
+
+.amountCell {
+  text-align: right;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.amountCell strong {
+  color: #1e293b;
+}
+
+.tableDeleteBtn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.tableDeleteBtn:hover {
+  background: #fee2e2;
+}
+
+.emptyTable {
+  text-align: center;
+  padding: 40px;
+  color: #94a3b8;
+  font-style: italic;
+}

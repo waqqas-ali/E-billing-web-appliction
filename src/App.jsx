@@ -50,6 +50,13 @@ import Manage from "./pages/superadmin/manage/Manage";
 import SubscriptionPlans from "./pages/admin/subscription-plans/SubscriptionPlans";
 import Protected from "./Protected/Protected";
 import Category from "./pages/admin/category/Category";
+
+import Parties_Report from "./pages/admin/reports/Parties Report/Parties_Report";
+import Profit_Loss_Report from "./pages/admin/reports/Profit Loss Report/ Profit_Loss_Report";
+import Bill_Profit_Loss_Report from "./pages/admin/reports/Profit Loss Report/Bill_Profit_Loss_Report";
+import Purchase_Report from "./pages/admin/reports/Purchase Report/Purchase_Report";
+import Sale_Report from "./pages/admin/reports/Sale Report/ Sale";
+import Statement_List from "./pages/admin/reports/Statement List/Statement_List";
 const App = () => {
   return (
     <Router>
@@ -109,6 +116,13 @@ const App = () => {
             <Route path="report" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
             <Route path="category" element={<Category />} />
+
+            <Route path="parties_report" element={<Parties_Report />} />
+            <Route path="profit_loss_report" element={<Profit_Loss_Report />} />
+            <Route path="bill_profit_loss_report" element={<Bill_Profit_Loss_Report />} />
+            <Route path="purchase_report" element={<Purchase_Report />} />
+            <Route path="sale_report" element={<Sale_Report />} />
+            <Route path="statement_list" element={<Statement_List />} />
           </Route>
 
           <Route path="/super-admin" element={<SuperAdminLayout />}>

@@ -1,11 +1,8 @@
-// "use client";
-
 // import React, { useEffect, useState } from "react";
 // import { useNavigate, useLocation } from "react-router-dom";
 // import axios from "axios";
 // import config from "../../../config/apiconfig";
 // import styles from "../Styles/Form.module.css";
-
 // import { toast } from "react-toastify";
 // import {
 //   Plus,
@@ -38,18 +35,18 @@
 //   const [items, setItems] = useState([]);
 //   const [message, setMessage] = useState("");
 
-//   // -----------------------------------------------------------------
-//   // Form State (unchanged)
-//   // -----------------------------------------------------------------
+//   const INVOICE_KEY = `invoiceCounter_${companyId}_${new Date().getFullYear()}`;
+
 //   const [formData, setFormData] = useState({
 //     partyId: "",
+//     partyPhone: "",
 //     billingAddress: "",
 //     shippingAddress: "",
 //     invoiceNumber: "",
 //     invoceDate: new Date().toISOString().split("T")[0],
 //     dueDate: new Date().toISOString().split("T")[0],
 //     saleType: "CASH",
-//     stateOfSupply: "ANDHRA_PRADESH",
+//     stateOfSupply: "MAHARASHTRA",
 //     paymentType: "CASH",
 //     paymentDescription: "",
 //     totalAmountWithoutTax: 0,
@@ -77,9 +74,59 @@
 //     ],
 //   });
 
-//   // -----------------------------------------------------------------
-//   // Handlers (unchanged)
-//   // -----------------------------------------------------------------
+//   // Invoice Number Logic
+//   // const getNextInvoiceNumber = () => {
+//   //   const counter = parseInt(localStorage.getItem(INVOICE_KEY) || "0", 10);
+//   //   return `KE/${new Date().getFullYear()}/${counter + 1}`;
+//   // };
+//   const getNextInvoiceNumber = () => {
+//     const key = `invoiceCounter_${companyId}_${new Date().getFullYear()}`;
+//     const counter = parseInt(localStorage.getItem(key) || "0", 10);
+//     return `KE/${new Date().getFullYear()}/${counter + 1}`;
+//   };
+//   const getInvoiceKey = () => `invoiceCounter_${companyId}_${new Date().getFullYear()}`;
+
+//   const reserveNextInvoiceNumber = () => {
+//     const key = getInvoiceKey();
+//     let counter = parseInt(localStorage.getItem(key) || "0", 10);
+//     counter += 1;
+//     localStorage.setItem(key, String(counter));
+//     return `KE/${new Date().getFullYear()}/${counter}`;
+//   }
+
+//   const reserveInvoiceNumber = () => {
+//     const counter = parseInt(localStorage.getItem(INVOICE_KEY) || "0", 10);
+//     const next = counter + 1;
+//     localStorage.setItem(INVOICE_KEY, String(next));
+//     return `KE/${new Date().getFullYear()}/${next}`;
+//   };
+
+//   // useEffect(() => {
+//   //   if (editId) return;
+//   //   const currentNumber = getNextInvoiceNumber();
+//   //   setFormData((prev) => ({ ...prev, invoiceNumber: currentNumber }));
+//   // }, [editId]);
+
+
+//   useEffect(() => {
+//     if (editId) return;
+  
+//     const previewNumber = getNextInvoiceNumber();
+//     setFormData(prev => ({ ...prev, invoiceNumber: previewNumber }));
+//   }, [editId, companyId]);
+
+//  const handleInvoiceNumberChange = (e) => {
+//   let value = e.target.value.trim().toUpperCase();
+
+//   if (value === "KE" || value.startsWith("KE/")) {
+//     const nextInvoice = reserveNextInvoiceNumber();
+//     setFormData(prev => ({ ...prev, invoiceNumber: nextInvoice }));
+//     return;
+//   }
+
+//   setFormData(prev => ({ ...prev, invoiceNumber: value }));
+// };
+
 //   const handleChange = (e) => {
 //     const { name, value, type, checked } = e.target;
 //     setFormData((prev) => ({
@@ -108,10 +155,6 @@
 //       case "GST28":
 //       case "IGST28":
 //         return 0.28;
-//       case "GST0":
-//       case "IGST0":
-//       case "EXEMPTED":
-//       case "NONE":
 //       default:
 //         return 0;
 //     }
@@ -133,7 +176,6 @@
 //         itemTaxAmount = itemTotalWithTax - itemTotalWithoutTax;
 //       } else {
 //         itemTotalWithoutTax = itemTotalWithTax;
-//         itemTaxAmount = 0;
 //       }
 //     } else {
 //       itemTotalWithoutTax = quantity * pricePerUnit;
@@ -156,30 +198,25 @@
 //       [name]: type === "checkbox" ? checked : value,
 //     };
 
-//     if (
-//       name === "quantity" ||
-//       name === "pricePerUnit" ||
-//       name === "pricePerUnitTaxType" ||
-//       name === "taxRate"
-//     ) {
-//       const itemCalculations = calculateItemTotals(itemsCopy[idx]);
-//       itemsCopy[idx].taxAmount = itemCalculations.taxAmount;
-//       itemsCopy[idx].totalAmount = itemCalculations.totalAmount;
+//     if (["quantity", "pricePerUnit", "pricePerUnitTaxType", "taxRate"].includes(name)) {
+//       const calc = calculateItemTotals(itemsCopy[idx]);
+//       itemsCopy[idx].taxAmount = calc.taxAmount;
+//       itemsCopy[idx].totalAmount = calc.totalAmount;
 //     }
 
 //     setFormData((prev) => ({ ...prev, saleItems: itemsCopy }));
 //   };
 
 //   const handleItemSelect = (idx, selectedItemId) => {
-//     const selectedItem = items.find(
-//       (item) => item.itemId === parseInt(selectedItemId)
-//     );
+//     const id = selectedItemId ? Number(selectedItemId) : "";
+//     const selectedItem = items.find((item) => item.itemId === id);
+
+//     const updatedSaleItems = [...formData.saleItems];
 
 //     if (selectedItem) {
-//       const updatedSaleItems = [...formData.saleItems];
 //       updatedSaleItems[idx] = {
 //         ...updatedSaleItems[idx],
-//         itemId: selectedItem.itemId,
+//         itemId: id,
 //         itemName: selectedItem.itemName,
 //         itemHsnCode: selectedItem.itemHsn,
 //         itemDescription: selectedItem.description,
@@ -189,14 +226,10 @@
 //         pricePerUnitTaxType: selectedItem.saleTaxType,
 //         taxRate: selectedItem.taxRate,
 //       };
-
-//       const itemCalculations = calculateItemTotals(updatedSaleItems[idx]);
-//       updatedSaleItems[idx].taxAmount = itemCalculations.taxAmount;
-//       updatedSaleItems[idx].totalAmount = itemCalculations.totalAmount;
-
-//       setFormData((prev) => ({ ...prev, saleItems: updatedSaleItems }));
+//       const calc = calculateItemTotals(updatedSaleItems[idx]);
+//       updatedSaleItems[idx].taxAmount = calc.taxAmount;
+//       updatedSaleItems[idx].totalAmount = calc.totalAmount;
 //     } else {
-//       const updatedSaleItems = [...formData.saleItems];
 //       updatedSaleItems[idx] = {
 //         ...updatedSaleItems[idx],
 //         itemId: "",
@@ -211,8 +244,9 @@
 //         taxAmount: 0,
 //         totalAmount: 0,
 //       };
-//       setFormData((prev) => ({ ...prev, saleItems: updatedSaleItems }));
 //     }
+
+//     setFormData((prev) => ({ ...prev, saleItems: updatedSaleItems }));
 //   };
 
 //   const addItem = () => {
@@ -244,16 +278,13 @@
 //     }));
 //   };
 
-//   // -----------------------------------------------------------------
-//   // API Calls (unchanged)
-//   // -----------------------------------------------------------------
 //   const fetchParties = async () => {
 //     try {
-//       const res = await axios.get(
-//         `${config.BASE_URL}/company/${companyId}/parties`,
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-//       setParties(res.data);
+//       const res = await axios.get(`${config.BASE_URL}/company/${companyId}/parties`, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+//       const fixed = res.data.map((p) => ({ ...p, id: p.partyId }));
+//       setParties(fixed);
 //     } catch (err) {
 //       toast.error("Failed to load parties");
 //     }
@@ -261,11 +292,14 @@
 
 //   const fetchItems = async () => {
 //     try {
-//       const res = await axios.get(
-//         `${config.BASE_URL}/company/${companyId}/items`,
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-//       setItems(res.data);
+//       const res = await axios.get(`${config.BASE_URL}/company/${companyId}/items`, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+//       const sanitized = res.data.map((item) => ({
+//         ...item,
+//         itemId: Number(item.itemId) || 0,
+//       }));
+//       setItems(sanitized);
 //     } catch (err) {
 //       toast.error("Failed to load items");
 //     }
@@ -278,16 +312,22 @@
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
 //       const sale = res.data;
+//       const party = sale.partyResponseDto || {};
+//       const partyId = Number(party.partyId) || "";
 
 //       setFormData({
-//         partyId: sale.partyResponseDto?.id || "",
-//         billingAddress: sale.billingAddress || "",
-//         shippingAddress: sale.shippingAddress || "",
+//         partyId,
+//         partyPhone: party.phoneNo || "",
+//         billingAddress: sale.billingAddress || party.billingAddress || "",
+//         shippingAddress:
+//           sale.shippingAddress ||
+//           party.shippingAddress ||
+//           party.shipingAddress || "", // handles backend typo
 //         invoiceNumber: sale.invoiceNumber || "",
 //         invoceDate: sale.invoceDate?.split("T")[0] || "",
 //         dueDate: sale.dueDate?.split("T")[0] || "",
 //         saleType: sale.saleType || "CASH",
-//         stateOfSupply: sale.stateOfSupply || "ANDHRA_PRADESH",
+//         stateOfSupply: sale.stateOfSupply || party.state || "MAHARASHTRA",
 //         paymentType: sale.paymentType || "CASH",
 //         paymentDescription: sale.paymentDescription || "",
 //         totalAmountWithoutTax: sale.totalAmountWithoutTax || 0,
@@ -300,7 +340,7 @@
 //         paid: sale.paid || false,
 //         saleItems:
 //           sale.saleItemResponses?.map((it) => ({
-//             itemId: it.itemId || "",
+//             itemId: Number(it.itemId) || "",
 //             itemName: it.itemName || "",
 //             itemHsnCode: it.itemHsnCode || "",
 //             itemDescription: it.itemDescription || "",
@@ -313,6 +353,11 @@
 //             totalAmount: it.totalAmount || 0,
 //           })) || [],
 //       });
+
+//       // Ensure party is in list (for auto-fill later)
+//       if (partyId && !parties.some((p) => p.id === partyId)) {
+//         setParties((prev) => [...prev, { ...party, id: partyId }]);
+//       }
 //     } catch (err) {
 //       toast.error(err.response?.data?.message || "Failed to load sale");
 //       navigate("/sales");
@@ -321,9 +366,26 @@
 //     }
 //   };
 
-//   // -----------------------------------------------------------------
-//   // Load on Mount (unchanged)
-//   // -----------------------------------------------------------------
+//   // Auto-fill party details when party is selected
+//   useEffect(() => {
+//     if (!formData.partyId || parties.length === 0) return;
+
+//     const selectedParty = parties.find((p) => p.id === Number(formData.partyId));
+//     if (selectedParty) {
+//       setFormData((prev) => ({
+//         ...prev,
+//         partyPhone: selectedParty.phoneNo || "",
+//         stateOfSupply: selectedParty.state || prev.stateOfSupply || "MAHARASHTRA",
+//         billingAddress: selectedParty.billingAddress || prev.billingAddress || "",
+//         shippingAddress:
+//           selectedParty.shippingAddress ||
+//           selectedParty.shipingAddress || // handles typo
+//           prev.shippingAddress ||
+//           "",
+//       }));
+//     }
+//   }, [formData.partyId, parties]);
+
 //   useEffect(() => {
 //     if (!token || !companyId) {
 //       navigate("/login");
@@ -334,23 +396,17 @@
 //     if (editId) fetchSale(editId);
 //   }, [token, companyId, editId, navigate]);
 
-//   // -----------------------------------------------------------------
-//   // Overall Totals (unchanged)
-//   // -----------------------------------------------------------------
-//   const calculateOverallTotals = (
-//     currentSaleItems,
-//     currentDeliveryCharges,
-//     currentReceivedAmount
-//   ) => {
+//   // Recalculate totals
+//   const calculateOverallTotals = (currentSaleItems, currentDeliveryCharges, currentReceivedAmount) => {
 //     let totalAmountWithoutTax = 0;
 //     let totalTaxAmount = 0;
 //     let totalAmount = 0;
 
 //     currentSaleItems.forEach((item) => {
-//       const itemCalculations = calculateItemTotals(item);
-//       totalAmountWithoutTax += itemCalculations.totalAmountWithoutTax;
-//       totalTaxAmount += itemCalculations.taxAmount;
-//       totalAmount += itemCalculations.totalAmount;
+//       const calc = calculateItemTotals(item);
+//       totalAmountWithoutTax += calc.totalAmountWithoutTax;
+//       totalTaxAmount += calc.taxAmount;
+//       totalAmount += calc.totalAmount;
 //     });
 
 //     const delivery = parseFloat(currentDeliveryCharges) || 0;
@@ -368,98 +424,114 @@
 //   };
 
 //   useEffect(() => {
-//     const {
-//       totalAmountWithoutTax,
-//       totalTaxAmount,
-//       totalAmount,
-//       balance,
-//     } = calculateOverallTotals(
+//     const totals = calculateOverallTotals(
 //       formData.saleItems,
 //       formData.deliveryCharges,
 //       formData.receivedAmount
 //     );
-
-//     setFormData((prev) => ({
-//       ...prev,
-//       totalAmountWithoutTax,
-//       totalTaxAmount,
-//       totalAmount,
-//       balance,
-//     }));
+//     setFormData((prev) => ({ ...prev, ...totals }));
 //   }, [formData.saleItems, formData.deliveryCharges, formData.receivedAmount]);
 
-//   // -----------------------------------------------------------------
-//   // Submit (unchanged)
-//   // -----------------------------------------------------------------
+//   // const handleSubmit = async (e) => {
+//   //   e.preventDefault();
+//   //   if (!token || !companyId) {
+//   //     toast.error("Authentication required");
+//   //     return;
+//   //   }
+
+//   //   const cleanData = {
+//   //     ...formData,
+//   //     partyId: formData.partyId ? Number(formData.partyId) : null,
+//   //     saleItems: formData.saleItems.map((item) => ({
+//   //       ...item,
+//   //       itemId: item.itemId ? Number(item.itemId) : null,
+//   //     })),
+//   //   };
+
+//   //   setLoading(true);
+//   //   try {
+//   //     const url = editId
+//   //       ? `${config.BASE_URL}/sale/${editId}`
+//   //       : `${config.BASE_URL}/company/${companyId}/create-sale`;
+//   //     const method = editId ? axios.put : axios.post;
+
+//   //     await method(url, cleanData, {
+//   //       headers: {
+//   //         Authorization: `Bearer ${token}`,
+//   //         "Content-Type": "application/json",
+//   //       },
+//   //     });
+
+//   //     toast.success(editId ? "Sale updated!" : "Sale created!");
+//   //     navigate("/sales");
+//   //   } catch (err) {
+//   //     const msg = err.response?.data?.message || "Operation failed";
+//   //     toast.error(msg);
+//   //     setMessage(`Error: ${msg}`);
+//   //   } finally {
+//   //     setLoading(false);
+//   //   }
+//   // };
+
+
+
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
 //     if (!token || !companyId) {
 //       toast.error("Authentication required");
 //       return;
 //     }
-
+  
+//     const cleanData = {
+//       ...formData,
+//       partyId: formData.partyId ? Number(formData.partyId) : null,
+//       saleItems: formData.saleItems.map((item) => ({
+//         ...item,
+//         itemId: item.itemId ? Number(item.itemId) : null,
+//       })),
+//     };
+  
 //     setLoading(true);
-//     setMessage("");
-
-//     const dataToSend = { ...formData };
-
 //     try {
 //       const url = editId
 //         ? `${config.BASE_URL}/sale/${editId}`
 //         : `${config.BASE_URL}/company/${companyId}/create-sale`;
-
 //       const method = editId ? axios.put : axios.post;
-
-//       await method(url, dataToSend, {
+  
+//       await method(url, cleanData, {
 //         headers: {
 //           Authorization: `Bearer ${token}`,
 //           "Content-Type": "application/json",
 //         },
 //       });
-
+  
+//       // ONLY AFTER SUCCESS → INCREMENT COUNTER
+//       if (!editId) {  // Only for new sales, not edits
+//         const key = `invoiceCounter_${companyId}_${new Date().getFullYear()}`;
+//         const current = parseInt(localStorage.getItem(key) || "0", 10);
+//         localStorage.setItem(key, String(current + 1));
+//       }
+  
 //       toast.success(editId ? "Sale updated!" : "Sale created!");
 //       navigate("/sales");
 //     } catch (err) {
 //       const msg = err.response?.data?.message || "Operation failed";
-//       setMessage(`Error: ${msg}`);
 //       toast.error(msg);
+//       setMessage(`Error: ${msg}`);
 //     } finally {
 //       setLoading(false);
 //     }
 //   };
 
-//   // -----------------------------------------------------------------
-//   // Constants (unchanged)
-//   // -----------------------------------------------------------------
 //   const saleTypes = ["CASH", "CREDIT"];
-//   const states = [
-//     "ANDHRA_PRADESH", "ARUNACHAL_PRADESH", "ASSAM", "BIHAR", "CHHATTISGARH", "GOA",
-//     "GUJARAT", "HARYANA", "HIMACHAL_PRADESH", "JHARKHAND", "KARNATAKA", "KERALA",
-//     "MADHYA_PRADESH", "MAHARASHTRA", "MANIPUR", "MEGHALAYA", "MIZORAM", "NAGALAND",
-//     "ODISHA", "PUNJAB", "RAJASTHAN", "SIKKIM", "TAMIL_NADU", "TELANGANA", "TRIPURA",
-//     "UTTAR_PRADESH", "UTTARAKHAND", "WEST_BENGAL", "OTHER",
-//   ];
-//   const units = [
-//     "CARTONS", "KILOGRAMS", "QUINTAL", "BOTTLES", "PIECES", "ROLLS", "NUMBERS",
-//     "PAIRS", "TABLETS", "MILLITRE", "BUNDLES", "BOX", "SQUARE_METERS", "BAGS",
-//     "CANS", "SQUARE_FEET",
-//   ];
+//   const states = ["ANDHRA_PRADESH", "ARUNACHAL_PRADESH", "ASSAM", "BIHAR", "CHHATTISGARH", "GOA", "GUJARAT", "HARYANA", "HIMACHAL_PRADESH", "JHARKHAND", "KARNATAKA", "KERALA", "MADHYA_PRADESH", "MAHARASHTRA", "MANIPUR", "MEGHALAYA", "MIZORAM", "NAGALAND", "ODISHA", "PUNJAB", "RAJASTHAN", "SIKKIM", "TAMIL_NADU", "TELANGANA", "TRIPURA", "UTTAR_PRADESH", "UTTARAKHAND", "WEST_BENGAL", "OTHER"];
+//   const units = ["CARTONS", "KILOGRAMS", "QUINTAL", "BOTTLES", "PIECES", "ROLLS", "NUMBERS", "PAIRS", "TABLETS", "MILLILITRE", "BUNDLES", "BOX", "SQUARE_METERS", "BAGS", "CANS", "SQUARE_FEET"];
 //   const taxTypes = ["WITHTAX", "WITHOUTTAX"];
-//   const taxRates = [
-//     "NONE", "EXEMPTED", "GST0", "IGST0", "GST0POINT25", "IGST0POINT25",
-//     "GST3", "IGST3", "GST5", "IGST5", "GST12", "IGST12", "GST18", "IGST18",
-//     "GST28", "IGST28",
-//   ];
-//   const paymentTypes = [
-//     "CASH", "UPI", "CREDIT_CARD", "DEBIT_CARD", "NET_BANKING", "WALLET",
-//     "CHEQUE", "OTHER",
-//   ];
+//   const taxRates = ["NONE", "EXEMPTED", "GST0", "IGST0", "GST0POINT25", "IGST0POINT25", "GST3", "IGST3", "GST5", "IGST5", "GST12", "IGST12", "GST18", "IGST18", "GST28", "IGST28"];
+//   const paymentTypes = ["CASH", "UPI", "CREDIT_CARD", "DEBIT_CARD", "NET_BANKING", "WALLET", "CHEQUE", "OTHER"];
 
 //   const isEditMode = !!editId;
 
-//   // -----------------------------------------------------------------
-//   // Render – UI identical to CreateSaleOrder
-//   // -----------------------------------------------------------------
 //   return (
 //     <div className={styles.container}>
 //       {loading && (
@@ -470,7 +542,7 @@
 //       )}
 
 //       <form onSubmit={handleSubmit} className={styles.form}>
-//         {/* ==== HEADER ==== */}
+//         {/* HEADER */}
 //         <div className={styles.header}>
 //           <div className={styles.headerContent}>
 //             <div className={styles.titleSection}>
@@ -494,7 +566,6 @@
 //               </p>
 //             </div>
 //           </div>
-
 //           <div className={styles.headerActions}>
 //             <button
 //               type="button"
@@ -525,7 +596,7 @@
 //           </div>
 //         </div>
 
-//         {/* ==== PARTY INFO ==== */}
+//         {/* PARTY INFO */}
 //         <div className={styles.formSection}>
 //           <h2 className={styles.sectionTitle}>
 //             <Users size={20} />
@@ -548,7 +619,7 @@
 //                 <option value="">Select Party</option>
 //                 {parties.map((p) => (
 //                   <option key={p.id} value={p.id}>
-//                     {p.name}
+//                     {p.name} - {p.phoneNo || "No Phone"}
 //                   </option>
 //                 ))}
 //               </select>
@@ -565,34 +636,31 @@
 //                 value={formData.invoiceNumber}
 //                 onChange={handleChange}
 //                 className={styles.input}
-//                 placeholder="e.g. INV-001"
+//                 placeholder="Type KE to auto-generate"
 //                 disabled={loading}
 //               />
 //             </div>
 
 //             <div className={styles.formGroup}>
-//               <label htmlFor="phone" className={styles.label}>
+//               <label htmlFor="partyPhone" className={styles.label}>
 //                 Phone No
 //               </label>
 //               <div className={styles.inputIcon}>
 //                 <Phone size={18} />
 //                 <input
-//                   id="phone"
+//                   id="partyPhone"
 //                   type="text"
-//                   name="phoneNo"
-//                   value={formData.phoneNo || ""}
-//                   onChange={handleChange}
-//                   className={styles.input}
-//                   placeholder="10-digit mobile"
-//                   maxLength={10}
-//                   disabled={loading}
+//                   value={formData.partyPhone || ""}
+//                   readOnly
+//                   className={`${styles.input} ${styles.inputReadonly}`}
+//                   placeholder="Auto-filled"
 //                 />
 //               </div>
 //             </div>
 //           </div>
 //         </div>
 
-//         {/* ==== DATES ==== */}
+//         {/* DATES */}
 //         <div className={styles.formSection}>
 //           <h2 className={styles.sectionTitle}>
 //             <Calendar size={20} />
@@ -614,7 +682,6 @@
 //                 disabled={loading}
 //               />
 //             </div>
-
 //             <div className={styles.formGroup}>
 //               <label htmlFor="dueDate" className={styles.label}>
 //                 Due Date <span className={styles.required}>*</span>
@@ -634,7 +701,7 @@
 //           </div>
 //         </div>
 
-//         {/* ==== PAYMENT & LOCATION ==== */}
+//         {/* PAYMENT & LOCATION */}
 //         <div className={styles.formSection}>
 //           <h2 className={styles.sectionTitle}>
 //             <CreditCard size={20} />
@@ -654,9 +721,7 @@
 //                 disabled={loading}
 //               >
 //                 {saleTypes.map((t) => (
-//                   <option key={t} value={t}>
-//                     {t}
-//                   </option>
+//                   <option key={t} value={t}>{t}</option>
 //                 ))}
 //               </select>
 //             </div>
@@ -706,7 +771,7 @@
 //           </div>
 //         </div>
 
-//         {/* ==== ADDRESSES ==== */}
+//         {/* ADDRESSES */}
 //         <div className={styles.formSection}>
 //           <h2 className={styles.sectionTitle}>Addresses</h2>
 //           <div className={styles.formGrid}>
@@ -724,7 +789,6 @@
 //                 disabled={loading}
 //               />
 //             </div>
-
 //             <div className={styles.formGroup}>
 //               <label htmlFor="shippingAddress" className={styles.label}>
 //                 Shipping Address
@@ -758,203 +822,175 @@
 //             disabled={loading}
 //           />
 //         </div>
+//         {/* ==== ITEMS TABLE ==== */}
+// <div className={styles.formSection}>
+//   <div className={styles.itemsHeader}>
+//     <h2 className={styles.sectionTitle}>
+//       <Package size={20} />
+//       Items
+//     </h2>
+//     <button
+//       type="button"
+//       onClick={addItem}
+//       className={styles.buttonAdd}
+//       disabled={loading}
+//     >
+//       <Plus size={18} />
+//       Add Item
+//     </button>
+//   </div>
 
-//         {/* ==== ITEMS ==== */}
-//         <div className={styles.formSection}>
-//           <div className={styles.itemsHeader}>
-//             <h2 className={styles.sectionTitle}>
-//               <Package size={20} />
-//               Items
-//             </h2>
-//             <button
-//               type="button"
-//               onClick={addItem}
-//               className={styles.buttonAdd}
-//               disabled={loading}
-//             >
-//               <Plus size={18} />
-//               Add Item
-//             </button>
-//           </div>
+//   <div className={styles.tableContainer}>
+//     <table className={styles.itemsTable}>
+//       <thead>
+//         <tr>
+//           <th>No</th>
+//           <th>Item Name</th>
+//           <th>HSN</th>
+//           <th>Qty</th>
+//           <th>Unit</th>
+//           <th>Rate</th>
+//           <th>Tax Type</th>
+//           <th>Tax Rate</th>
+//           <th>Tax ₹</th>
+//           <th>Total ₹</th>
+//           <th></th>
+//         </tr>
+//       </thead>
+//       <tbody>
+//         {formData.saleItems.map((item, idx) => (
+//           <tr key={idx}>
+//             <td className={styles.rowNumber}>{idx + 1}</td>
 
-//           <div className={styles.itemsList}>
-//             {formData.saleItems.map((it, idx) => (
-//               <div key={idx} className={styles.itemCard}>
-//                 <div className={styles.itemHeader}>
-//                   <span className={styles.itemNumber}>Item {idx + 1}</span>
-//                   {formData.saleItems.length > 1 && (
-//                     <button
-//                       type="button"
-//                       onClick={() => removeItem(idx)}
-//                       className={styles.buttonDelete}
-//                       disabled={loading}
-//                     >
-//                       <Trash2 size={18} />
-//                     </button>
-//                   )}
-//                 </div>
+//             <td>
+//               <select
+//                 value={item.itemId || ""}
+//                 onChange={(e) => handleItemSelect(idx, e.target.value)}
+//                 required
+//                 className={styles.tableSelect}
+//                 disabled={loading}
+//               >
+//                 <option value="">-- Select --</option>
+//                 {items.map((i) => (
+//                   <option key={i.itemId} value={i.itemId}>
+//                     {i.itemName}
+//                   </option>
+//                 ))}
+//               </select>
+//             </td>
 
-//                 {/* Item select & HSN */}
-//                 <div className={styles.itemGrid}>
-//                   <div className={styles.formGroup}>
-//                     <label className={styles.label}>
-//                       Item <span className={styles.required}>*</span>
-//                     </label>
-//                     <select
-//                       value={it.itemId || ""}
-//                       onChange={(e) => handleItemSelect(idx, e.target.value)}
-//                       required
-//                       className={styles.input}
-//                       disabled={loading}
-//                     >
-//                       <option value="">-- Select Item --</option>
-//                       {items.map((i) => (
-//                         <option key={i.itemId} value={i.itemId}>
-//                           {i.itemName} (HSN: {i.itemHsn})
-//                         </option>
-//                       ))}
-//                     </select>
-//                   </div>
+//             <td>
+//               <input
+//                 type="text"
+//                 value={item.itemHsnCode}
+//                 readOnly
+//                 className={styles.tableInputReadonly}
+//               />
+//             </td>
 
-//                   <div className={styles.formGroup}>
-//                     <label className={styles.label}>HSN</label>
-//                     <input
-//                       type="text"
-//                       value={it.itemHsnCode}
-//                       readOnly
-//                       className={`${styles.input} ${styles.inputReadonly}`}
-//                     />
-//                   </div>
-//                 </div>
+//             <td>
+//               <input
+//                 type="number"
+//                 step="0.01"
+//                 min="0.01"
+//                 name="quantity"
+//                 value={item.quantity}
+//                 onChange={(e) => handleItemChange(idx, e)}
+//                 required
+//                 className={styles.tableInput}
+//                 disabled={loading}
+//               />
+//             </td>
 
-//                 {/* Quantity & Unit */}
-//                 <div className={styles.itemGrid}>
-//                   <div className={styles.formGroup}>
-//                     <label className={styles.label}>
-//                       Quantity <span className={styles.required}>*</span>
-//                     </label>
-//                     <input
-//                       type="number"
-//                       step="0.01"
-//                       min="0.01"
-//                       name="quantity"
-//                       value={it.quantity}
-//                       onChange={(e) => handleItemChange(idx, e)}
-//                       required
-//                       className={styles.input}
-//                       disabled={loading}
-//                     />
-//                   </div>
+//             <td>
+//               <select
+//                 name="unit"
+//                 value={item.unit}
+//                 onChange={(e) => handleItemChange(idx, e)}
+//                 className={styles.tableSelect}
+//                 disabled={loading}
+//               >
+//                 {units.map((u) => (
+//                   <option key={u} value={u}>{u}</option>
+//                 ))}
+//               </select>
+//             </td>
 
-//                   <div className={styles.formGroup}>
-//                     <label className={styles.label}>Unit</label>
-//                     <select
-//                       name="unit"
-//                       value={it.unit}
-//                       onChange={(e) => handleItemChange(idx, e)}
-//                       className={styles.input}
-//                       disabled={loading}
-//                     >
-//                       {units.map((u) => (
-//                         <option key={u} value={u}>
-//                           {u}
-//                         </option>
-//                       ))}
-//                     </select>
-//                   </div>
-//                 </div>
+//             <td>
+//               <input
+//                 type="number"
+//                 step="0.01"
+//                 name="pricePerUnit"
+//                 value={item.pricePerUnit}
+//                 onChange={(e) => handleItemChange(idx, e)}
+//                 required
+//                 className={styles.tableInput}
+//                 disabled={loading}
+//               />
+//             </td>
 
-//                 {/* Rate & Tax type */}
-//                 <div className={styles.itemGrid}>
-//                   <div className={styles.formGroup}>
-//                     <label className={styles.label}>
-//                       Rate/Unit <span className={styles.required}>*</span>
-//                     </label>
-//                     <input
-//                       type="number"
-//                       step="0.01"
-//                       min="0.01"
-//                       name="pricePerUnit"
-//                       value={it.pricePerUnit}
-//                       onChange={(e) => handleItemChange(idx, e)}
-//                       required
-//                       className={styles.input}
-//                       disabled={loading}
-//                     />
-//                   </div>
+//             <td>
+//               <select
+//                 name="pricePerUnitTaxType"
+//                 value={item.pricePerUnitTaxType}
+//                 onChange={(e) => handleItemChange(idx, e)}
+//                 className={styles.tableSelect}
+//               >
+//                 {taxTypes.map((t) => (
+//                   <option key={t} value={t}>{t === "WITHTAX" ? "Inc. Tax" : "Ex. Tax"}</option>
+//                 ))}
+//               </select>
+//             </td>
 
-//                   <div className={styles.formGroup}>
-//                     <label className={styles.label}>Tax Type</label>
-//                     <select
-//                       name="pricePerUnitTaxType"
-//                       value={it.pricePerUnitTaxType}
-//                       onChange={(e) => handleItemChange(idx, e)}
-//                       className={styles.input}
-//                       disabled={loading}
-//                     >
-//                       {taxTypes.map((t) => (
-//                         <option key={t} value={t}>
-//                           {t}
-//                         </option>
-//                       ))}
-//                     </select>
-//                   </div>
+//             <td>
+//               <select
+//                 name="taxRate"
+//                 value={item.taxRate}
+//                 onChange={(e) => handleItemChange(idx, e)}
+//                 className={styles.tableSelect}
+//               >
+//                 {taxRates.map((r) => (
+//                   <option key={r} value={r}>
+//                     {r.replace("GST", "").replace("IGST", "") || "0%"}
+//                   </option>
+//                 ))}
+//               </select>
+//             </td>
 
-//                   <div className={styles.formGroup}>
-//                     <label className={styles.label}>Tax Rate</label>
-//                     <select
-//                       name="taxRate"
-//                       value={it.taxRate}
-//                       onChange={(e) => handleItemChange(idx, e)}
-//                       className={styles.input}
-//                       disabled={loading}
-//                     >
-//                       {taxRates.map((r) => (
-//                         <option key={r} value={r}>
-//                           {r}
-//                         </option>
-//                       ))}
-//                     </select>
-//                   </div>
-//                 </div>
+//             <td className={styles.amountCell}>
+//               <IndianRupee size={14} />
+//               {item.taxAmount.toFixed(2)}
+//             </td>
 
-//                 {/* Totals per item */}
-//                 <div className={styles.itemGrid}>
-//                   <div className={styles.formGroup}>
-//                     <label className={styles.label}>Tax Amount</label>
-//                     <div className={styles.valueDisplay}>
-//                       <IndianRupee size={16} />
-//                       <span>{it.taxAmount.toFixed(2)}</span>
-//                     </div>
-//                   </div>
+//             <td className={styles.amountCell}>
+//               <IndianRupee size={14} />
+//               <strong>{item.totalAmount.toFixed(2)}</strong>
+//             </td>
 
-//                   <div className={styles.formGroup}>
-//                     <label className={styles.label}>Total</label>
-//                     <div className={`${styles.valueDisplay} ${styles.valueDisplayTotal}`}>
-//                       <IndianRupee size={16} />
-//                       <span>{it.totalAmount.toFixed(2)}</span>
-//                     </div>
-//                   </div>
-//                 </div>
+//             <td>
+//               {formData.saleItems.length > 1 && (
+//                 <button
+//                   type="button"
+//                   onClick={() => removeItem(idx)}
+//                   className={styles.tableDeleteBtn}
+//                   disabled={loading}
+//                 >
+//                   <Trash2 size={16} />
+//                 </button>
+//               )}
+//             </td>
+//           </tr>
+//         ))}
+//       </tbody>
+//     </table>
 
-//                 {/* Optional description */}
-//                 <div className={styles.itemGrid}>
-//                   <div className={styles.formGroup}>
-//                     <label className={styles.label}>Description</label>
-//                     <textarea
-//                       name="itemDescription"
-//                       value={it.itemDescription}
-//                       readOnly
-//                       className={`${styles.input} ${styles.textarea}`}
-//                       rows={2}
-//                       disabled={loading}
-//                     />
-//                   </div>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
+//     {formData.saleItems.length === 0 && (
+//       <div className={styles.emptyTable}>
+//         <p>No items added yet. Click "Add Item" to start.</p>
+//       </div>
+//     )}
+//   </div>
+// </div>
 
 //         {/* ==== SUMMARY ==== */}
 //         <div className={styles.summarySection}>
@@ -1093,20 +1129,13 @@
 
 
 
-
-
-
-
-
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
-import config from "../../../config/apiconfig";
-import styles from "../Styles/Form.module.css";
-
+import api from "../../../utils/axiosInstance"; // Shared API with interceptors
 import { toast } from "react-toastify";
+import styles from "../Styles/Form.module.css";
 import {
   Plus,
   Trash2,
@@ -1129,27 +1158,30 @@ const CreateSale = () => {
   const query = new URLSearchParams(location.search);
   const editId = query.get("edit");
 
-  const userData = JSON.parse(localStorage.getItem("eBilling")) || {};
-  const token = userData?.accessToken || "";
-  const companyId = userData?.selectedCompany?.id || "";
+  const [userData, setUserData] = useState(
+    JSON.parse(localStorage.getItem("eBilling") || "{}")
+  );
+
+  const token = userData?.accessToken;
+  const companyId = userData?.selectedCompany?.id;
 
   const [loading, setLoading] = useState(false);
   const [parties, setParties] = useState([]);
   const [items, setItems] = useState([]);
   const [message, setMessage] = useState("");
 
-  // -----------------------------------------------------------------
-  // Form State (unchanged)
-  // -----------------------------------------------------------------
+  const INVOICE_KEY = `invoiceCounter_${companyId}_${new Date().getFullYear()}`;
+
   const [formData, setFormData] = useState({
     partyId: "",
+    partyPhone: "",
     billingAddress: "",
     shippingAddress: "",
     invoiceNumber: "",
     invoceDate: new Date().toISOString().split("T")[0],
     dueDate: new Date().toISOString().split("T")[0],
     saleType: "CASH",
-    stateOfSupply: "ANDHRA_PRADESH",
+    stateOfSupply: "MAHARASHTRA",
     paymentType: "CASH",
     paymentDescription: "",
     totalAmountWithoutTax: 0,
@@ -1177,33 +1209,41 @@ const CreateSale = () => {
     ],
   });
 
-  // -----------------------------------------------------------------
-  // INVOICE NUMBER AUTO-GENERATION
-  // -----------------------------------------------------------------
+  // Invoice Number Logic
   const getNextInvoiceNumber = () => {
-    const year = new Date().getFullYear();
-    const prefix = `KE/${year}/`;
-    const storageKey = `invoiceCounter_${year}`;
-
-    let counter = parseInt(localStorage.getItem(storageKey) || "0", 10);
-    counter += 1;
-    localStorage.setItem(storageKey, String(counter));
-
-    return `${prefix}${counter}`;
+    const key = `invoiceCounter_${companyId}_${new Date().getFullYear()}`;
+    const counter = parseInt(localStorage.getItem(key) || "0", 10);
+    return `KE/${new Date().getFullYear()}/${counter + 1}`;
   };
 
-  // Auto-fill invoice number when user types "KE"
-  useEffect(() => {
-    const inv = formData.invoiceNumber?.trim().toUpperCase();
-    if (inv === "KE") {
-      const next = getNextInvoiceNumber();
-      setFormData((prev) => ({ ...prev, invoiceNumber: next }));
-    }
-  }, [formData.invoiceNumber]);
+  const reserveNextInvoiceNumber = () => {
+    const key = `invoiceCounter_${companyId}_${new Date().getFullYear()}`;
+    let counter = parseInt(localStorage.getItem(key) || "0", 10);
+    counter += 1;
+    localStorage.setItem(key, String(counter));
+    return `KE/${new Date().getFullYear()}/${counter}`;
+  };
 
-  // -----------------------------------------------------------------
-  // Handlers (unchanged)
-  // -----------------------------------------------------------------
+  // Show preview invoice number on load (only for new sales)
+  useEffect(() => {
+    if (editId) return;
+
+    const previewNumber = getNextInvoiceNumber();
+    setFormData(prev => ({ ...prev, invoiceNumber: previewNumber }));
+  }, [editId, companyId]);
+
+  const handleInvoiceNumberChange = (e) => {
+    let value = e.target.value.trim().toUpperCase();
+
+    if (value === "KE" || value.startsWith("KE/")) {
+      const nextInvoice = reserveNextInvoiceNumber();
+      setFormData(prev => ({ ...prev, invoiceNumber: nextInvoice }));
+      return;
+    }
+
+    setFormData(prev => ({ ...prev, invoiceNumber: value }));
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -1232,10 +1272,6 @@ const CreateSale = () => {
       case "GST28":
       case "IGST28":
         return 0.28;
-      case "GST0":
-      case "IGST0":
-      case "EXEMPTED":
-      case "NONE":
       default:
         return 0;
     }
@@ -1257,7 +1293,6 @@ const CreateSale = () => {
         itemTaxAmount = itemTotalWithTax - itemTotalWithoutTax;
       } else {
         itemTotalWithoutTax = itemTotalWithTax;
-        itemTaxAmount = 0;
       }
     } else {
       itemTotalWithoutTax = quantity * pricePerUnit;
@@ -1280,30 +1315,25 @@ const CreateSale = () => {
       [name]: type === "checkbox" ? checked : value,
     };
 
-    if (
-      name === "quantity" ||
-      name === "pricePerUnit" ||
-      name === "pricePerUnitTaxType" ||
-      name === "taxRate"
-    ) {
-      const itemCalculations = calculateItemTotals(itemsCopy[idx]);
-      itemsCopy[idx].taxAmount = itemCalculations.taxAmount;
-      itemsCopy[idx].totalAmount = itemCalculations.totalAmount;
+    if (["quantity", "pricePerUnit", "pricePerUnitTaxType", "taxRate"].includes(name)) {
+      const calc = calculateItemTotals(itemsCopy[idx]);
+      itemsCopy[idx].taxAmount = calc.taxAmount;
+      itemsCopy[idx].totalAmount = calc.totalAmount;
     }
 
     setFormData((prev) => ({ ...prev, saleItems: itemsCopy }));
   };
 
   const handleItemSelect = (idx, selectedItemId) => {
-    const selectedItem = items.find(
-      (item) => item.itemId === parseInt(selectedItemId)
-    );
+    const id = selectedItemId ? Number(selectedItemId) : "";
+    const selectedItem = items.find((item) => item.itemId === id);
+
+    const updatedSaleItems = [...formData.saleItems];
 
     if (selectedItem) {
-      const updatedSaleItems = [...formData.saleItems];
       updatedSaleItems[idx] = {
         ...updatedSaleItems[idx],
-        itemId: selectedItem.itemId,
+        itemId: id,
         itemName: selectedItem.itemName,
         itemHsnCode: selectedItem.itemHsn,
         itemDescription: selectedItem.description,
@@ -1313,14 +1343,10 @@ const CreateSale = () => {
         pricePerUnitTaxType: selectedItem.saleTaxType,
         taxRate: selectedItem.taxRate,
       };
-
-      const itemCalculations = calculateItemTotals(updatedSaleItems[idx]);
-      updatedSaleItems[idx].taxAmount = itemCalculations.taxAmount;
-      updatedSaleItems[idx].totalAmount = itemCalculations.totalAmount;
-
-      setFormData((prev) => ({ ...prev, saleItems: updatedSaleItems }));
+      const calc = calculateItemTotals(updatedSaleItems[idx]);
+      updatedSaleItems[idx].taxAmount = calc.taxAmount;
+      updatedSaleItems[idx].totalAmount = calc.totalAmount;
     } else {
-      const updatedSaleItems = [...formData.saleItems];
       updatedSaleItems[idx] = {
         ...updatedSaleItems[idx],
         itemId: "",
@@ -1335,8 +1361,9 @@ const CreateSale = () => {
         taxAmount: 0,
         totalAmount: 0,
       };
-      setFormData((prev) => ({ ...prev, saleItems: updatedSaleItems }));
     }
+
+    setFormData((prev) => ({ ...prev, saleItems: updatedSaleItems }));
   };
 
   const addItem = () => {
@@ -1368,16 +1395,11 @@ const CreateSale = () => {
     }));
   };
 
-  // -----------------------------------------------------------------
-  // API Calls (unchanged)
-  // -----------------------------------------------------------------
   const fetchParties = async () => {
     try {
-      const res = await axios.get(
-        `${config.BASE_URL}/company/${companyId}/parties`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setParties(res.data);
+      const res = await api.get(`/company/${companyId}/parties`);
+      const fixed = res.data.map((p) => ({ ...p, id: p.partyId }));
+      setParties(fixed);
     } catch (err) {
       toast.error("Failed to load parties");
     }
@@ -1385,11 +1407,12 @@ const CreateSale = () => {
 
   const fetchItems = async () => {
     try {
-      const res = await axios.get(
-        `${config.BASE_URL}/company/${companyId}/items`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setItems(res.data);
+      const res = await api.get(`/company/${companyId}/items`);
+      const sanitized = res.data.map((item) => ({
+        ...item,
+        itemId: Number(item.itemId) || 0,
+      }));
+      setItems(sanitized);
     } catch (err) {
       toast.error("Failed to load items");
     }
@@ -1398,20 +1421,24 @@ const CreateSale = () => {
   const fetchSale = async (saleId) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${config.BASE_URL}/sale/${saleId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get(`/sale/${saleId}`);
       const sale = res.data;
+      const party = sale.partyResponseDto || {};
+      const partyId = Number(party.partyId) || "";
 
       setFormData({
-        partyId: sale.partyResponseDto?.id || "",
-        billingAddress: sale.billingAddress || "",
-        shippingAddress: sale.shippingAddress || "",
+        partyId,
+        partyPhone: party.phoneNo || "",
+        billingAddress: sale.billingAddress || party.billingAddress || "",
+        shippingAddress:
+          sale.shippingAddress ||
+          party.shippingAddress ||
+          party.shipingAddress || "",
         invoiceNumber: sale.invoiceNumber || "",
         invoceDate: sale.invoceDate?.split("T")[0] || "",
         dueDate: sale.dueDate?.split("T")[0] || "",
         saleType: sale.saleType || "CASH",
-        stateOfSupply: sale.stateOfSupply || "ANDHRA_PRADESH",
+        stateOfSupply: sale.stateOfSupply || party.state || "MAHARASHTRA",
         paymentType: sale.paymentType || "CASH",
         paymentDescription: sale.paymentDescription || "",
         totalAmountWithoutTax: sale.totalAmountWithoutTax || 0,
@@ -1424,7 +1451,7 @@ const CreateSale = () => {
         paid: sale.paid || false,
         saleItems:
           sale.saleItemResponses?.map((it) => ({
-            itemId: it.itemId || "",
+            itemId: Number(it.itemId) || "",
             itemName: it.itemName || "",
             itemHsnCode: it.itemHsnCode || "",
             itemDescription: it.itemDescription || "",
@@ -1437,6 +1464,10 @@ const CreateSale = () => {
             totalAmount: it.totalAmount || 0,
           })) || [],
       });
+
+      if (partyId && !parties.some((p) => p.id === partyId)) {
+        setParties((prev) => [...prev, { ...party, id: partyId }]);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to load sale");
       navigate("/sales");
@@ -1445,36 +1476,65 @@ const CreateSale = () => {
     }
   };
 
-  // -----------------------------------------------------------------
-  // Load on Mount (unchanged)
-  // -----------------------------------------------------------------
+  // Auto-fill party details
   useEffect(() => {
-    if (!token || !companyId) {
+    if (!formData.partyId || parties.length === 0) return;
+
+    const selectedParty = parties.find((p) => p.id === Number(formData.partyId));
+    if (selectedParty) {
+      setFormData((prev) => ({
+        ...prev,
+        partyPhone: selectedParty.phoneNo || "",
+        stateOfSupply: selectedParty.state || prev.stateOfSupply || "MAHARASHTRA",
+        billingAddress: selectedParty.billingAddress || prev.billingAddress || "",
+        shippingAddress:
+          selectedParty.shippingAddress ||
+          selectedParty.shipingAddress ||
+          prev.shippingAddress ||
+          "",
+      }));
+    }
+  }, [formData.partyId, parties]);
+
+  // Sync userData & fetch data
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const updated = JSON.parse(localStorage.getItem("eBilling") || "{}");
+      setUserData(updated);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  useEffect(() => {
+    if (!token) {
+      toast.info("Please log in to continue.");
       navigate("/login");
       return;
     }
+    if (!companyId) {
+      toast.info("Please select a company first.");
+      navigate("/company-list");
+      return;
+    }
+
     fetchParties();
     fetchItems();
     if (editId) fetchSale(editId);
   }, [token, companyId, editId, navigate]);
 
-  // -----------------------------------------------------------------
-  // Overall Totals (unchanged)
-  // -----------------------------------------------------------------
-  const calculateOverallTotals = (
-    currentSaleItems,
-    currentDeliveryCharges,
-    currentReceivedAmount
-  ) => {
+  // Recalculate totals
+  const calculateOverallTotals = (currentSaleItems, currentDeliveryCharges, currentReceivedAmount) => {
     let totalAmountWithoutTax = 0;
     let totalTaxAmount = 0;
     let totalAmount = 0;
 
     currentSaleItems.forEach((item) => {
-      const itemCalculations = calculateItemTotals(item);
-      totalAmountWithoutTax += itemCalculations.totalAmountWithoutTax;
-      totalTaxAmount += itemCalculations.taxAmount;
-      totalAmount += itemCalculations.totalAmount;
+      const calc = calculateItemTotals(item);
+      totalAmountWithoutTax += calc.totalAmountWithoutTax;
+      totalTaxAmount += calc.taxAmount;
+      totalAmount += calc.totalAmount;
     });
 
     const delivery = parseFloat(currentDeliveryCharges) || 0;
@@ -1492,109 +1552,77 @@ const CreateSale = () => {
   };
 
   useEffect(() => {
-    const {
-      totalAmountWithoutTax,
-      totalTaxAmount,
-      totalAmount,
-      balance,
-    } = calculateOverallTotals(
+    const totals = calculateOverallTotals(
       formData.saleItems,
       formData.deliveryCharges,
       formData.receivedAmount
     );
-
-    setFormData((prev) => ({
-      ...prev,
-      totalAmountWithoutTax,
-      totalTaxAmount,
-      totalAmount,
-      balance,
-    }));
+    setFormData((prev) => ({ ...prev, ...totals }));
   }, [formData.saleItems, formData.deliveryCharges, formData.receivedAmount]);
 
-  // -----------------------------------------------------------------
-  // Submit (unchanged)
-  // -----------------------------------------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!token || !companyId) {
-      toast.error("Authentication required");
+
+    if (!formData.itemName?.trim() && formData.saleItems.length === 0) {
+      toast.error("Add at least one item");
       return;
     }
 
+    const cleanData = {
+      ...formData,
+      partyId: formData.partyId ? Number(formData.partyId) : null,
+      saleItems: formData.saleItems.map((item) => ({
+        ...item,
+        itemId: item.itemId ? Number(item.itemId) : null,
+      })),
+    };
+
     setLoading(true);
-    setMessage("");
-
-    const dataToSend = { ...formData };
-
     try {
       const url = editId
-        ? `${config.BASE_URL}/sale/${editId}`
-        : `${config.BASE_URL}/company/${companyId}/create-sale`;
+        ? `/sale/${editId}`
+        : `/company/${companyId}/create-sale`;
 
-      const method = editId ? axios.put : axios.post;
+      await (editId ? api.put(url, cleanData) : api.post(url, cleanData));
 
-      await method(url, dataToSend, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // Only increment counter on successful creation (not edit)
+      if (!editId) {
+        const key = `invoiceCounter_${companyId}_${new Date().getFullYear()}`;
+        const current = parseInt(localStorage.getItem(key) || "0", 10);
+        localStorage.setItem(key, String(current + 1));
+      }
 
       toast.success(editId ? "Sale updated!" : "Sale created!");
       navigate("/sales");
     } catch (err) {
       const msg = err.response?.data?.message || "Operation failed";
-      setMessage(`Error: ${msg}`);
       toast.error(msg);
+      setMessage(`Error: ${msg}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // -----------------------------------------------------------------
-  // Constants (unchanged)
-  // -----------------------------------------------------------------
   const saleTypes = ["CASH", "CREDIT"];
-  const states = [
-    "ANDHRA_PRADESH", "ARUNACHAL_PRADESH", "ASSAM", "BIHAR", "CHHATTISGARH", "GOA",
-    "GUJARAT", "HARYANA", "HIMACHAL_PRADESH", "JHARKHAND", "KARNATAKA", "KERALA",
-    "MADHYA_PRADESH", "MAHARASHTRA", "MANIPUR", "MEGHALAYA", "MIZORAM", "NAGALAND",
-    "ODISHA", "PUNJAB", "RAJASTHAN", "SIKKIM", "TAMIL_NADU", "TELANGANA", "TRIPURA",
-    "UTTAR_PRADESH", "UTTARAKHAND", "WEST_BENGAL", "OTHER",
-  ];
-  const units = [
-    "CARTONS", "KILOGRAMS", "QUINTAL", "BOTTLES", "PIECES", "ROLLS", "NUMBERS",
-    "PAIRS", "TABLETS", "MILLITRE", "BUNDLES", "BOX", "SQUARE_METERS", "BAGS",
-    "CANS", "SQUARE_FEET",
-  ];
+  const states = ["ANDHRA_PRADESH", "ARUNACHAL_PRADESH", "ASSAM", "BIHAR", "CHHATTISGARH", "GOA", "GUJARAT", "HARYANA", "HIMACHAL_PRADESH", "JHARKHAND", "KARNATAKA", "KERALA", "MADHYA_PRADESH", "MAHARASHTRA", "MANIPUR", "MEGHALAYA", "MIZORAM", "NAGALAND", "ODISHA", "PUNJAB", "RAJASTHAN", "SIKKIM", "TAMIL_NADU", "TELANGANA", "TRIPURA", "UTTAR_PRADESH", "UTTARAKHAND", "WEST_BENGAL", "OTHER"];
+  const units = ["CARTONS", "KILOGRAMS", "QUINTAL", "BOTTLES", "PIECES", "ROLLS", "NUMBERS", "PAIRS", "TABLETS", "MILLILITRE", "BUNDLES", "BOX", "SQUARE_METERS", "BAGS", "CANS", "SQUARE_FEET"];
   const taxTypes = ["WITHTAX", "WITHOUTTAX"];
-  const taxRates = [
-    "NONE", "EXEMPTED", "GST0", "IGST0", "GST0POINT25", "IGST0POINT25",
-    "GST3", "IGST3", "GST5", "IGST5", "GST12", "IGST12", "GST18", "IGST18",
-    "GST28", "IGST28",
-  ];
-  const paymentTypes = [
-    "CASH", "UPI", "CREDIT_CARD", "DEBIT_CARD", "NET_BANKING", "WALLET",
-    "CHEQUE", "OTHER",
-  ];
+  const taxRates = ["NONE", "EXEMPTED", "GST0", "IGST0", "GST0POINT25", "IGST0POINT25", "GST3", "IGST3", "GST5", "IGST5", "GST12", "IGST12", "GST18", "IGST18", "GST28", "IGST28"];
+  const paymentTypes = ["CASH", "UPI", "CREDIT_CARD", "DEBIT_CARD", "NET_BANKING", "WALLET", "CHEQUE", "OTHER"];
 
   const isEditMode = !!editId;
 
-  // -----------------------------------------------------------------
-  // Render – UI identical to CreateSaleOrder
-  // -----------------------------------------------------------------
   return (
     <div className={styles.container}>
       {loading && (
         <div className={styles.loadingContainer}>
           <Loader className={styles.spinnerIcon} />
-          <p>Loading sale data...</p>
+          <p>{isEditMode ? "Loading sale data..." : "Preparing invoice..."}</p>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className={styles.form}>
-        {/* ==== HEADER ==== */}
+        {/* HEADER */}
         <div className={styles.header}>
           <div className={styles.headerContent}>
             <div className={styles.titleSection}>
@@ -1618,7 +1646,6 @@ const CreateSale = () => {
               </p>
             </div>
           </div>
-
           <div className={styles.headerActions}>
             <button
               type="button"
@@ -1649,7 +1676,7 @@ const CreateSale = () => {
           </div>
         </div>
 
-        {/* ==== PARTY INFO ==== */}
+        {/* PARTY INFO */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
             <Users size={20} />
@@ -1672,7 +1699,7 @@ const CreateSale = () => {
                 <option value="">Select Party</option>
                 {parties.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name}
+                    {p.name} - {p.phoneNo || "No Phone"}
                   </option>
                 ))}
               </select>
@@ -1687,36 +1714,33 @@ const CreateSale = () => {
                 type="text"
                 name="invoiceNumber"
                 value={formData.invoiceNumber}
-                onChange={handleChange}
+                onChange={handleInvoiceNumberChange}
                 className={styles.input}
-                placeholder="Type KE to auto-generate (e.g. KE/2025/1)"
+                placeholder="Type KE to auto-generate"
                 disabled={loading}
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label htmlFor="phone" className={styles.label}>
+              <label htmlFor="partyPhone" className={styles.label}>
                 Phone No
               </label>
               <div className={styles.inputIcon}>
                 <Phone size={18} />
                 <input
-                  id="phone"
+                  id="partyPhone"
                   type="text"
-                  name="phoneNo"
-                  value={formData.phoneNo || ""}
-                  onChange={handleChange}
-                  className={styles.input}
-                  placeholder="10-digit mobile"
-                  maxLength={10}
-                  disabled={loading}
+                  value={formData.partyPhone || ""}
+                  readOnly
+                  className={`${styles.input} ${styles.inputReadonly}`}
+                  placeholder="Auto-filled"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* ==== DATES ==== */}
+        {/* DATES */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
             <Calendar size={20} />
@@ -1738,7 +1762,6 @@ const CreateSale = () => {
                 disabled={loading}
               />
             </div>
-
             <div className={styles.formGroup}>
               <label htmlFor="dueDate" className={styles.label}>
                 Due Date <span className={styles.required}>*</span>
@@ -1758,7 +1781,7 @@ const CreateSale = () => {
           </div>
         </div>
 
-        {/* ==== PAYMENT & LOCATION ==== */}
+        {/* PAYMENT & LOCATION */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>
             <CreditCard size={20} />
@@ -1778,9 +1801,7 @@ const CreateSale = () => {
                 disabled={loading}
               >
                 {saleTypes.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
+                  <option key={t} value={t}>{t}</option>
                 ))}
               </select>
             </div>
@@ -1830,7 +1851,7 @@ const CreateSale = () => {
           </div>
         </div>
 
-        {/* ==== ADDRESSES ==== */}
+        {/* ADDRESSES */}
         <div className={styles.formSection}>
           <h2 className={styles.sectionTitle}>Addresses</h2>
           <div className={styles.formGrid}>
@@ -1848,7 +1869,6 @@ const CreateSale = () => {
                 disabled={loading}
               />
             </div>
-
             <div className={styles.formGroup}>
               <label htmlFor="shippingAddress" className={styles.label}>
                 Shipping Address
@@ -1866,7 +1886,7 @@ const CreateSale = () => {
           </div>
         </div>
 
-        {/* ==== PAYMENT DESCRIPTION ==== */}
+        {/* PAYMENT DESCRIPTION */}
         <div className={styles.formSection}>
           <label htmlFor="paymentDescription" className={styles.label}>
             Payment Description
@@ -1883,7 +1903,7 @@ const CreateSale = () => {
           />
         </div>
 
-        {/* ==== ITEMS ==== */}
+        {/* ITEMS TABLE */}
         <div className={styles.formSection}>
           <div className={styles.itemsHeader}>
             <h2 className={styles.sectionTitle}>
@@ -1901,186 +1921,159 @@ const CreateSale = () => {
             </button>
           </div>
 
-          <div className={styles.itemsList}>
-            {formData.saleItems.map((it, idx) => (
-              <div key={idx} className={styles.itemCard}>
-                <div className={styles.itemHeader}>
-                  <span className={styles.itemNumber}>Item {idx + 1}</span>
-                  {formData.saleItems.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeItem(idx)}
-                      className={styles.buttonDelete}
-                      disabled={loading}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  )}
-                </div>
+          <div className={styles.tableContainer}>
+            <table className={styles.itemsTable}>
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Item Name</th>
+                  <th>HSN</th>
+                  <th>Qty</th>
+                  <th>Unit</th>
+                  <th>Rate</th>
+                  <th>Tax Type</th>
+                  <th>Tax Rate</th>
+                  <th>Tax ₹</th>
+                  <th>Total ₹</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {formData.saleItems.map((item, idx) => (
+                  <tr key={idx}>
+                    <td className={styles.rowNumber}>{idx + 1}</td>
 
-                {/* Item select & HSN */}
-                <div className={styles.itemGrid}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>
-                      Item <span className={styles.required}>*</span>
-                    </label>
-                    <select
-                      value={it.itemId || ""}
-                      onChange={(e) => handleItemSelect(idx, e.target.value)}
-                      required
-                      className={styles.input}
-                      disabled={loading}
-                    >
-                      <option value="">-- Select Item --</option>
-                      {items.map((i) => (
-                        <option key={i.itemId} value={i.itemId}>
-                          {i.itemName} (HSN: {i.itemHsn})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    <td>
+                      <select
+                        value={item.itemId || ""}
+                        onChange={(e) => handleItemSelect(idx, e.target.value)}
+                        required
+                        className={styles.tableSelect}
+                        disabled={loading}
+                      >
+                        <option value="">-- Select --</option>
+                        {items.map((i) => (
+                          <option key={i.itemId} value={i.itemId}>
+                            {i.itemName}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
 
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>HSN</label>
-                    <input
-                      type="text"
-                      value={it.itemHsnCode}
-                      readOnly
-                      className={`${styles.input} ${styles.inputReadonly}`}
-                    />
-                  </div>
-                </div>
+                    <td>
+                      <input
+                        type="text"
+                        value={item.itemHsnCode}
+                        readOnly
+                        className={styles.tableInputReadonly}
+                      />
+                    </td>
 
-                {/* Quantity & Unit */}
-                <div className={styles.itemGrid}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>
-                      Quantity <span className={styles.required}>*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      name="quantity"
-                      value={it.quantity}
-                      onChange={(e) => handleItemChange(idx, e)}
-                      required
-                      className={styles.input}
-                      disabled={loading}
-                    />
-                  </div>
+                    <td>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        name="quantity"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(idx, e)}
+                        required
+                        className={styles.tableInput}
+                        disabled={loading}
+                      />
+                    </td>
 
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Unit</label>
-                    <select
-                      name="unit"
-                      value={it.unit}
-                      onChange={(e) => handleItemChange(idx, e)}
-                      className={styles.input}
-                      disabled={loading}
-                    >
-                      {units.map((u) => (
-                        <option key={u} value={u}>
-                          {u}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                    <td>
+                      <select
+                        name="unit"
+                        value={item.unit}
+                        onChange={(e) => handleItemChange(idx, e)}
+                        className={styles.tableSelect}
+                        disabled={loading}
+                      >
+                        {units.map((u) => (
+                          <option key={u} value={u}>{u}</option>
+                        ))}
+                      </select>
+                    </td>
 
-                {/* Rate & Tax type */}
-                <div className={styles.itemGrid}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>
-                      Rate/Unit <span className={styles.required}>*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      name="pricePerUnit"
-                      value={it.pricePerUnit}
-                      onChange={(e) => handleItemChange(idx, e)}
-                      required
-                      className={styles.input}
-                      disabled={loading}
-                    />
-                  </div>
+                    <td>
+                      <input
+                        type="number"
+                        step="0.01"
+                        name="pricePerUnit"
+                        value={item.pricePerUnit}
+                        onChange={(e) => handleItemChange(idx, e)}
+                        required
+                        className={styles.tableInput}
+                        disabled={loading}
+                      />
+                    </td>
 
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Tax Type</label>
-                    <select
-                      name="pricePerUnitTaxType"
-                      value={it.pricePerUnitTaxType}
-                      onChange={(e) => handleItemChange(idx, e)}
-                      className={styles.input}
-                      disabled={loading}
-                    >
-                      {taxTypes.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    <td>
+                      <select
+                        name="pricePerUnitTaxType"
+                        value={item.pricePerUnitTaxType}
+                        onChange={(e) => handleItemChange(idx, e)}
+                        className={styles.tableSelect}
+                      >
+                        {taxTypes.map((t) => (
+                          <option key={t} value={t}>{t === "WITHTAX" ? "Inc. Tax" : "Ex. Tax"}</option>
+                        ))}
+                      </select>
+                    </td>
 
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Tax Rate</label>
-                    <select
-                      name="taxRate"
-                      value={it.taxRate}
-                      onChange={(e) => handleItemChange(idx, e)}
-                      className={styles.input}
-                      disabled={loading}
-                    >
-                      {taxRates.map((r) => (
-                        <option key={r} value={r}>
-                          {r}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                    <td>
+                      <select
+                        name="taxRate"
+                        value={item.taxRate}
+                        onChange={(e) => handleItemChange(idx, e)}
+                        className={styles.tableSelect}
+                      >
+                        {taxRates.map((r) => (
+                          <option key={r} value={r}>
+                            {r.replace("GST", "").replace("IGST", "") || "0%"}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
 
-                {/* Totals per item */}
-                <div className={styles.itemGrid}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Tax Amount</label>
-                    <div className={styles.valueDisplay}>
-                      <IndianRupee size={16} />
-                      <span>{it.taxAmount.toFixed(2)}</span>
-                    </div>
-                  </div>
+                    <td className={styles.amountCell}>
+                      <IndianRupee size={14} />
+                      {item.taxAmount.toFixed(2)}
+                    </td>
 
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Total</label>
-                    <div className={`${styles.valueDisplay} ${styles.valueDisplayTotal}`}>
-                      <IndianRupee size={16} />
-                      <span>{it.totalAmount.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
+                    <td className={styles.amountCell}>
+                      <IndianRupee size={14} />
+                      <strong>{item.totalAmount.toFixed(2)}</strong>
+                    </td>
 
-                {/* Optional description */}
-                <div className={styles.itemGrid}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Description</label>
-                    <textarea
-                      name="itemDescription"
-                      value={it.itemDescription}
-                      readOnly
-                      className={`${styles.input} ${styles.textarea}`}
-                      rows={2}
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
+                    <td>
+                      {formData.saleItems.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeItem(idx)}
+                          className={styles.tableDeleteBtn}
+                          disabled={loading}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {formData.saleItems.length === 0 && (
+              <div className={styles.emptyTable}>
+                <p>No items added yet. Click "Add Item" to start.</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
-        {/* ==== SUMMARY ==== */}
+        {/* SUMMARY */}
         <div className={styles.summarySection}>
           <h2 className={styles.sectionTitle}>Order Summary</h2>
           <div className={styles.summaryGrid}>
@@ -2133,7 +2126,7 @@ const CreateSale = () => {
             </div>
           </div>
 
-          {/* Delivery & Received (editable) */}
+          {/* Editable fields */}
           <div className={styles.formGrid} style={{ marginTop: "1rem" }}>
             <div className={styles.formGroup}>
               <label htmlFor="deliveryCharges" className={styles.label}>
@@ -2176,7 +2169,6 @@ const CreateSale = () => {
             </div>
           </div>
 
-          {/* Overdue / Paid */}
           <div className={styles.formGrid} style={{ marginTop: "1rem" }}>
             <div className={styles.formGroup}>
               <label className={styles.label}>

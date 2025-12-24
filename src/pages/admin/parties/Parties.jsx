@@ -532,13 +532,390 @@
 
 
 
-// src/pages/Parties.jsx
+// // src/pages/Parties.jsx
+// "use client";
+
+// import { useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import axios from "axios";
+// import config from "../../../config/apiconfig";
+// import {
+//   Search,
+//   Plus,
+//   Edit2,
+//   Trash2,
+//   Eye,
+//   X,
+//   Package,
+//   AlertCircle,
+//   CheckCircle,
+//   Loader,
+//   Mail,
+//   Phone,
+//   MapPin,
+//   Home,
+//   Building,
+//   ChevronDown, // <-- ADDED HERE
+// } from "lucide-react";
+// import styles from "../Styles/ScreenUI.module.css";
+
+// const Parties = () => {
+//   const navigate = useNavigate();
+//   const ebillingData = JSON.parse(localStorage.getItem("eBilling")) || {};
+//   const companyId = ebillingData?.selectedCompany?.id;
+//   const token = ebillingData?.accessToken;
+
+//   const [parties, setParties] = useState([]);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [selectedParty, setSelectedParty] = useState(null);
+
+//   /* ------------------------------------------------------------------ */
+//   /* -------------------------- API LOGIC ---------------------------- */
+//   /* ------------------------------------------------------------------ */
+//   const fetchParties = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const response = await axios.get(
+//         `${config.BASE_URL}/company/${companyId}/parties`,
+//         { headers: { Authorization: `Bearer ${token}` } }
+//       );
+//       setParties(response.data);
+//     } catch (err) {
+//       setError(err.response?.data?.message || "Failed to load parties.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (!token || !companyId) {
+//       navigate("/Add-parties");
+//       return;
+//     }
+//     fetchParties();
+//   }, [token, companyId, navigate]);
+
+//   const handleEdit = (party) => {
+//     navigate("/Add-parties", { state: { party, companyId, token } });
+//   };
+
+//   const handleDelete = async (partyId) => {
+//     if (!window.confirm("Delete this party?")) return;
+//     setLoading(true);
+//     try {
+//       await axios.delete(`${config.BASE_URL}/party/${partyId}`, {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+//       fetchParties();
+//     } catch (err) {
+//       setError(err.response?.data?.message || "Failed to delete.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const filteredParties = parties.filter((p) =>
+//     [p.name, p.gstin, p.emailId, p.phoneNo]
+//       .filter(Boolean)
+//       .some((f) => f.toLowerCase().includes(searchTerm.toLowerCase()))
+//   );
+
+//   const formatEnum = (val) =>
+//     val
+//       ? val
+//           .replace(/_/g, " ")
+//           .toLowerCase()
+//           .replace(/\b\w/g, (c) => c.toUpperCase())
+//       : "—";
+
+//   /* ------------------------------------------------------------------ */
+//   /* --------------------------- RENDER ------------------------------- */
+//   /* ------------------------------------------------------------------ */
+//   return (
+//     <div className={styles["company-form-container"]}>
+//       {/* ==================== HEADER ==================== */}
+//       <div className={styles["form-header"]}>
+//         <div className={styles["header-content"]}>
+//           <div className={styles["header-text"]}>
+//             <h1 className={styles["company-form-title"]}>Parties</h1>
+//             <p className={styles["form-subtitle"]}>Manage your business contacts</p>
+//           </div>
+//         </div>
+//         <button
+//           onClick={() => navigate("/Add-parties", { state: { companyId, token } })}
+//           className={styles["submit-button"]}
+//           disabled={loading}
+//         >
+//           <Plus size={18} />
+//           <span>Create Party</span>
+//         </button>
+//       </div>
+
+//       {/* ==================== SEARCH ==================== */}
+//       <div className={styles["search-container"]}>
+//         <Search size={18} className={styles["search-icon"]} />
+//         <input
+//           type="text"
+//           placeholder="Search by name, GST, email, phone..."
+//           value={searchTerm}
+//           onChange={(e) => setSearchTerm(e.target.value)}
+//           className={styles["search-input"]}
+//           disabled={loading}
+//         />
+//       </div>
+
+//       {/* ==================== LOADING ==================== */}
+//       {loading && (
+//         <div className={styles["loading-message"]}>
+//           <Loader size={32} className={styles["spinner"]} />
+//           <p>Loading parties...</p>
+//         </div>
+//       )}
+
+//       {/* ==================== ERROR ==================== */}
+//       {error && (
+//         <div className={styles["error"]}>
+//           <AlertCircle size={18} />
+//           {error}
+//         </div>
+//       )}
+
+//       {/* ==================== TABLE / CARDS ==================== */}
+//       {filteredParties.length > 0 ? (
+//         <>
+//           {/* ---------- Desktop Table ---------- */}
+//           <div className={styles["table-wrapper"]}>
+//             <table className={styles.table}>
+//               <thead>
+//                 <tr>
+//                   <th>Name</th>
+//                   <th>GST No</th>
+//                   <th>Type</th>
+//                   <th>Phone</th>
+//                   <th>State</th>
+//                   <th>Email</th>
+//                   <th>Billing</th>
+//                   <th>Shipping</th>
+//                   <th>Action</th>
+//                 </tr>
+//               </thead>
+//               <tbody>
+//                 {filteredParties.map((p) => (
+//                   <tr key={p.partyId} className={styles["table-row"]}>
+//                     <td className={styles["nameCell"]}>{p.name || "—"}</td>
+//                     <td>{p.gstin || "—"}</td>
+//                     <td>{formatEnum(p.gstType)}</td>
+//                     <td>{p.phoneNo || "—"}</td>
+//                     <td>{formatEnum(p.state)}</td>
+//                     <td>
+//                       {p.emailId ? (
+//                         <a href={`mailto:${p.emailId}`} className={styles.link}>
+//                           {p.emailId}
+//                         </a>
+//                       ) : "—"}
+//                     </td>
+//                     <td className={styles["addressCell"]}>{p.billingAddress || "—"}</td>
+//                     <td className={styles["addressCell"]}>{p.shipingAddress || "—"}</td>
+//                     <td className={styles["actions-cell"]}>
+//                       <button
+//                         onClick={() => setSelectedParty(p)}
+//                         className={`${styles["action-button"]} ${styles["view-button"]}`}
+//                         title="View details"
+//                       >
+//                         <Eye size={16} />
+//                         <span>View</span>
+//                       </button>
+//                     </td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </table>
+//           </div>
+
+//           {/* ---------- Mobile Cards ---------- */}
+//           <div className={styles["mobile-cards-container"]}>
+//             {filteredParties.map((p) => (
+//               <div key={p.partyId} className={styles["invoice-card"]}>
+//                 <div className={styles["card-header-mobile"]}>
+//                   <div className={styles["card-title-section"]}>
+//                     <h3 className={styles["card-invoice-number"]}>{p.name || "Unnamed"}</h3>
+//                     <span className={styles["status-badge-paid"]}>{formatEnum(p.gstType)}</span>
+//                   </div>
+//                   <button
+//                     onClick={() => setSelectedParty(p)}
+//                     className={styles["card-action-button"]}
+//                   >
+//                     <ChevronDown size={20} /> {/* NOW WORKS */}
+//                   </button>
+//                 </div>
+
+//                 <div className={styles["card-body"]}>
+//                   {p.gstin && (
+//                     <div className={styles["card-info-row"]}>
+//                       <span className={styles["info-label"]}>GSTIN:</span>
+//                       <span className={styles["info-value"]}>{p.gstin}</span>
+//                     </div>
+//                   )}
+//                   {p.phoneNo && (
+//                     <div className={styles["card-info-row"]}>
+//                       <span className={styles["info-label"]}>Phone:</span>
+//                       <span className={styles["info-value"]}>{p.phoneNo}</span>
+//                     </div>
+//                   )}
+//                   {p.state && (
+//                     <div className={styles["card-info-row"]}>
+//                       <span className={styles["info-label"]}>State:</span>
+//                       <span className={styles["info-value"]}>{formatEnum(p.state)}</span>
+//                     </div>
+//                   )}
+//                   {p.emailId && (
+//                     <div className={styles["card-info-row"]}>
+//                       <span className={styles["info-label"]}>Email:</span>
+//                       <a href={`mailto:${p.emailId}`} className={styles.link}>
+//                         {p.emailId}
+//                       </a>
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 <div className={styles["card-footer"]}>
+//                   <button
+//                     onClick={() => setSelectedParty(p)}
+//                     className={styles["card-view-button"]}
+//                   >
+//                     <Eye size={16} />
+//                     View Details
+//                   </button>
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+//         </>
+//       ) : (
+//         /* ==================== EMPTY STATE ==================== */
+//         !loading && (
+//           <div className={styles["no-data"]}>
+//             <Package size={48} />
+//             <p>No parties found</p>
+//             <p className={styles["no-data-subtitle"]}>
+//               {searchTerm ? "Try adjusting your search criteria" : 'Click "Create Party" to add one.'}
+//             </p>
+//           </div>
+//         )
+//       )}
+
+//       {/* ==================== VIEW MODAL ==================== */}
+//       {selectedParty && (
+//         <div className={styles["modal-overlay"]} onClick={() => setSelectedParty(null)}>
+//           <div className={styles["detail-card"]} onClick={(e) => e.stopPropagation()}>
+//             <div className={styles["card-header"]}>
+//               <div className={styles["header-title-section"]}>
+//                 <h3>Party #{selectedParty.partyId}</h3>
+//                 <div className={styles["balance-badge"]}>
+//                   <CheckCircle size={16} />
+//                   Active
+//                 </div>
+//               </div>
+
+//               <div className={styles["header-actions"]}>
+//                 <button
+//                   onClick={() => handleEdit(selectedParty)}
+//                   className={`${styles["action-button"]} ${styles["edit-button"]}`}
+//                   title="Edit party"
+//                 >
+//                   <Edit2 size={16} />
+//                   <span>Edit</span>
+//                 </button>
+
+//                 <button
+//                   onClick={() => handleDelete(selectedParty.partyId)}
+//                   className={`${styles["action-button"]} ${styles["delete-button"]}`}
+//                   title="Delete party"
+//                 >
+//                   <Trash2 size={16} />
+//                   <span>Delete</span>
+//                 </button>
+
+//                 <button
+//                   className={styles["close-modal-btn"]}
+//                   onClick={() => setSelectedParty(null)}
+//                   title="Close"
+//                 >
+//                   <X size={20} />
+//                 </button>
+//               </div>
+//             </div>
+
+//             {/* ---------- Party Details ---------- */}
+//             <section className={styles["card-section"]}>
+//               <h4 className={styles["section-title"]}>Party Information</h4>
+//               <div className={styles["detail-grid"]}>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Name:</span>
+//                   <span className={styles["detail-value"]}>{selectedParty.name || "—"}</span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>GSTIN:</span>
+//                   <span className={styles["detail-value"]}>{selectedParty.gstin || "—"}</span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>GST Type:</span>
+//                   <span className={styles["detail-value"]}>{formatEnum(selectedParty.gstType)}</span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Phone:</span>
+//                   <span className={styles["detail-value"]}>{selectedParty.phoneNo || "—"}</span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Email:</span>
+//                   <span className={styles["detail-value"]}>
+//                     {selectedParty.emailId ? (
+//                       <a href={`mailto:${selectedParty.emailId}`} className={styles.link}>
+//                         {selectedParty.emailId}
+//                       </a>
+//                     ) : "—"}
+//                   </span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>State:</span>
+//                   <span className={styles["detail-value"]}>{formatEnum(selectedParty.state)}</span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Billing Address:</span>
+//                   <span className={styles["detail-value"]}>{selectedParty.billingAddress || "—"}</span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Shipping Address:</span>
+//                   <span className={styles["detail-value"]}>{selectedParty.shipingAddress || "—"}</span>
+//                 </div>
+//               </div>
+//             </section>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default Parties;
+
+
+
+
+
+
+
+
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import config from "../../../config/apiconfig";
+import api from "../../../utils/axiosInstance"; // 👈 Shared API with interceptors
+import { toast } from "react-toastify";
 import {
   Search,
   Plus,
@@ -555,15 +932,19 @@ import {
   MapPin,
   Home,
   Building,
-  ChevronDown, // <-- ADDED HERE
+  ChevronDown,
 } from "lucide-react";
 import styles from "../Styles/ScreenUI.module.css";
 
 const Parties = () => {
   const navigate = useNavigate();
-  const ebillingData = JSON.parse(localStorage.getItem("eBilling")) || {};
-  const companyId = ebillingData?.selectedCompany?.id;
-  const token = ebillingData?.accessToken;
+
+  const [userData, setUserData] = useState(
+    JSON.parse(localStorage.getItem("eBilling") || "{}")
+  );
+
+  const companyId = userData?.selectedCompany?.id;
+  const token = userData?.accessToken;
 
   const [parties, setParties] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -571,47 +952,62 @@ const Parties = () => {
   const [error, setError] = useState(null);
   const [selectedParty, setSelectedParty] = useState(null);
 
-  /* ------------------------------------------------------------------ */
-  /* -------------------------- API LOGIC ---------------------------- */
-  /* ------------------------------------------------------------------ */
+  // Sync with localStorage changes (e.g., logout, token refresh, company switch)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const updated = JSON.parse(localStorage.getItem("eBilling") || "{}");
+      setUserData(updated);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  // Auth check + fetch parties
+  useEffect(() => {
+    if (!token || !companyId) {
+      toast.info("Please select a company to manage parties.");
+      navigate("/company-list"); // Better than /Add-parties if no company
+      return;
+    }
+
+    fetchParties();
+  }, [token, companyId, navigate]);
+
   const fetchParties = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(
-        `${config.BASE_URL}/company/${companyId}/parties`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setParties(response.data);
+      const response = await api.get(`/company/${companyId}/parties`);
+      setParties(response.data || []);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load parties.");
+      const message =
+        err.response?.data?.message || "Failed to load parties.";
+      setError(message);
+      toast.error(message);
+      // 401 handled globally by interceptor
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (!token || !companyId) {
-      navigate("/Add-parties");
-      return;
-    }
-    fetchParties();
-  }, [token, companyId, navigate]);
-
   const handleEdit = (party) => {
-    navigate("/Add-parties", { state: { party, companyId, token } });
+    navigate("/Add-parties", { state: { party } }); // No need to pass companyId/token
   };
 
   const handleDelete = async (partyId) => {
-    if (!window.confirm("Delete this party?")) return;
+    if (!window.confirm("Are you sure you want to delete this party?")) return;
+
     setLoading(true);
     try {
-      await axios.delete(`${config.BASE_URL}/party/${partyId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/party/${partyId}`);
+      toast.success("Party deleted successfully.");
       fetchParties();
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete.");
+      const message =
+        err.response?.data?.message || "Failed to delete party.";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -631,9 +1027,6 @@ const Parties = () => {
           .replace(/\b\w/g, (c) => c.toUpperCase())
       : "—";
 
-  /* ------------------------------------------------------------------ */
-  /* --------------------------- RENDER ------------------------------- */
-  /* ------------------------------------------------------------------ */
   return (
     <div className={styles["company-form-container"]}>
       {/* ==================== HEADER ==================== */}
@@ -645,7 +1038,7 @@ const Parties = () => {
           </div>
         </div>
         <button
-          onClick={() => navigate("/Add-parties", { state: { companyId, token } })}
+          onClick={() => navigate("/Add-parties")}
           className={styles["submit-button"]}
           disabled={loading}
         >
@@ -748,7 +1141,7 @@ const Parties = () => {
                     onClick={() => setSelectedParty(p)}
                     className={styles["card-action-button"]}
                   >
-                    <ChevronDown size={20} /> {/* NOW WORKS */}
+                    <ChevronDown size={20} />
                   </button>
                 </div>
 
@@ -795,7 +1188,6 @@ const Parties = () => {
           </div>
         </>
       ) : (
-        /* ==================== EMPTY STATE ==================== */
         !loading && (
           <div className={styles["no-data"]}>
             <Package size={48} />

@@ -1,0 +1,725 @@
+/* Container */
+.reportContainer {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+  }
+  
+  /* Header */
+  .reportHeader {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  
+  .reportTitle {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.5rem 0;
+  }
+  
+  .reportSubtitle {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0;
+  }
+  
+  /* Filters Section */
+  .filtersSection {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .filtersGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .filterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .filterLabel {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+  
+  .filterSelect,
+  .filterInput {
+    padding: 0.625rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    background: white;
+    color: #111827;
+    transition: all 0.2s;
+  }
+  
+  .filterSelect:focus,
+  .filterInput:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  .filterSelect:disabled,
+  .filterInput:disabled {
+    background: #f3f4f6;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  .refreshButton {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .refreshButton:hover:not(:disabled) {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .refreshButton:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+  }
+  /* Modal Overlay */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+  }
+  
+  /* Modal Content */
+  .modalContent {
+    background: white;
+    border-radius: 0.75rem;
+    width: 100%;
+    max-width: 1000px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  /* Modal Header */
+  .modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  /* Modal Title */
+  .modalTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+  
+  /* Modal Close Button */
+  .modalClose {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+  }
+  
+  .modalClose:hover {
+    background: #f3f4f6;
+    color: #374151;
+  }
+  
+  /* Summary Cards */
+  .summaryCards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .summaryCard {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+  }
+  
+  .summaryCard:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .summaryLabel {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  
+  .summaryValue {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+  }
+  
+  .summaryValue.profit {
+    color: #059669;
+  }
+  
+  .summaryValue.loss {
+    color: #dc2626;
+  }
+  
+  /* Detailed Profit/Loss Sections */
+  .detailsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem; /* Added for spacing consistency */
+  }
+  
+  /* Section Card */
+  .sectionCard {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sectionTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  
+  /* Details Grid */
+  .detailsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .detailRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .detailRow:last-child {
+    border-bottom: none;
+  }
+  
+  .detailLabel {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+  
+  .detailValue {
+    font-size: 0.875rem;
+    color: #111827;
+    font-weight: 600;
+  }
+  
+  .detailValue.negative {
+    color: #dc2626;
+  }
+  
+  /* Subtotal Row */
+  .subtotalRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0 0 0;
+    margin-top: 0.75rem;
+    border-top: 2px solid #e5e7eb;
+  }
+  
+  .subtotalLabel {
+    font-size: 1rem;
+    color: #374151;
+    font-weight: 700;
+  }
+  
+  .subtotalValue {
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+  
+  /* Final Card */
+  .finalCard {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .finalRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .finalLabel {
+    font-size: 1.5rem;
+    color: white;
+    font-weight: 700;
+  }
+  
+  .finalValue {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+  }
+  
+  .finalValue.profit {
+    color: #86efac;
+  }
+  
+  .finalValue.loss {
+    color: #fca5a5;
+  }
+  
+  /* Error Message */
+  .errorMessage {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.5rem;
+    color: #991b1b;
+    margin-bottom: 1rem;
+  }
+  
+  .errorIcon {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+  }
+  
+  /* Loading State */
+  .loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    gap: 1rem;
+  }
+  
+  .spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 4px solid #e5e7eb;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .loadingText {
+    color: #6b7280;
+    font-size: 1rem;
+  }
+  
+  /* Table */
+  .tableContainer {
+    overflow-x: auto;
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .reportTable {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+  }
+  
+  .tableHeader {
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  
+  .tableHeader th {
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    white-space: nowrap;
+  }
+  
+  .sortableHeader {
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  
+  .sortableHeader:hover {
+    background: #f3f4f6;
+  }
+  
+  .sortIcon {
+    margin-left: 0.5rem;
+    color: #3b82f6;
+    font-weight: bold;
+  }
+  
+  .tableBody {
+    background: white;
+  }
+  
+  .tableRow {
+    border-bottom: 1px solid #e5e7eb;
+    transition: background 0.2s;
+  }
+  
+  .tableRow:hover {
+    background: #f9fafb;
+  }
+  
+  .tableRow:last-child {
+    border-bottom: none;
+  }
+  
+  .tableCell {
+    padding: 1rem;
+    font-size: 0.875rem;
+    color: #111827;
+  }
+  
+  .profitCell {
+    color: #059669;
+    font-weight: 600;
+  }
+  
+  .lossCell {
+    color: #dc2626;
+    font-weight: 600;
+  }
+  
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .paginationButton {
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .paginationButton:hover:not(:disabled) {
+    background: #f9fafb;
+    border-color: #9ca3af;
+  }
+  
+  .paginationButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .paginationInfo {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+  
+  /* Empty State */
+  .emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .emptyIcon {
+    width: 4rem;
+    height: 4rem;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+  }
+  
+  .emptyTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 0.5rem 0;
+  }
+  
+  .emptyDescription {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .reportContainer {
+      padding: 0.75rem;
+    }
+  
+    .reportTitle {
+      font-size: 1.5rem;
+    }
+  
+    .reportSubtitle {
+      font-size: 0.875rem;
+    }
+  
+    .filtersSection {
+      padding: 1rem;
+    }
+  
+    .filtersGrid {
+      grid-template-columns: 1fr;
+    }
+  
+    .summaryCards {
+      grid-template-columns: 1fr;
+    }
+  
+    .summaryCard {
+      padding: 1rem;
+    }
+  
+    .summaryValue {
+      font-size: 1.5rem;
+    }
+  
+    .sectionCard {
+      padding: 1rem;
+    }
+  
+    .sectionTitle {
+      font-size: 1.125rem;
+    }
+  
+    .detailRow {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+      padding: 0.75rem 0;
+    }
+  
+    .detailLabel,
+    .detailValue {
+      font-size: 0.8125rem;
+    }
+  
+    .subtotalLabel,
+    .finalLabel {
+      font-size: 1rem;
+    }
+  
+    .subtotalValue {
+      font-size: 1rem;
+    }
+  
+    .finalValue {
+      font-size: 1.5rem;
+    }
+  
+    .finalCard {
+      padding: 1.5rem;
+    }
+  
+    .tableContainer {
+      margin: 0 -0.75rem 1rem;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+    }
+  
+    .reportTable {
+      font-size: 0.8125rem;
+    }
+  
+    .tableHeader th,
+    .tableCell {
+      padding: 0.75rem 0.5rem;
+    }
+  
+    .pagination {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+  
+    .paginationButton {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .reportTitle {
+      font-size: 1.25rem;
+    }
+  
+    .summaryValue {
+      font-size: 1.25rem;
+    }
+  
+    .sectionTitle {
+      font-size: 1rem;
+    }
+  
+    .detailLabel,
+    .detailValue {
+      font-size: 0.75rem;
+    }
+  
+    .subtotalLabel,
+    .finalLabel {
+      font-size: 0.875rem;
+    }
+  
+    .subtotalValue,
+    .finalValue {
+      font-size: 1.125rem;
+    }
+  
+    .finalCard {
+      padding: 1rem;
+    }
+  
+    .reportTable {
+      font-size: 0.75rem;
+      min-width: 600px;
+    }
+  
+    .tableHeader th,
+    .tableCell {
+      padding: 0.5rem 0.375rem;
+    }
+  
+    .emptyIcon {
+      width: 3rem;
+      height: 3rem;
+    }
+  }
+  
+  /* Print Styles */
+  @media print {
+    .reportContainer {
+      max-width: 100%;
+    }
+  
+    .filtersSection,
+    .refreshButton,
+    .pagination {
+      display: none;
+    }
+  
+    .tableRow:hover {
+      background: white;
+    }
+  
+    .reportTable {
+      font-size: 0.75rem;
+    }
+  
+    /* Ensure new sections are also print-friendly */
+    .detailsContainer,
+    .sectionCard,
+    .finalCard {
+      box-shadow: none;
+      border: 1px solid #ccc; /* Or none, depending on desired print look */
+      page-break-inside: avoid; /* Prevent breaking in the middle of a card */
+    }
+  
+    .finalCard {
+      background: #e0e7ff !important; /* Lighter background for print */
+      color: #000 !important;
+    }
+  
+    .finalLabel,
+    .finalValue {
+      color: #000 !important;
+    }
+    .finalValue.profit {
+      color: #059669 !important;
+    }
+    .finalValue.loss {
+      color: #dc2626 !important;
+    }
+  }
+  
