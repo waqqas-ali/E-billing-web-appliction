@@ -2141,6 +2141,790 @@
 
 
 
+// "use client";
+
+// import { useState, useEffect } from "react";
+// import { useNavigate, useLocation } from "react-router-dom";
+// import api from "../../../utils/axiosInstance"; // Shared API with interceptors
+// import { toast } from "react-toastify";
+// import styles from "../Styles/Form.module.css";
+// import {
+//   Plus,
+//   Trash2,
+//   ArrowLeft,
+//   CheckCircle,
+//   Package,
+//   Users,
+//   Calendar,
+//   MapPin,
+//   FileText,
+//   IndianRupee,
+//   Loader,
+//   Truck,
+//   Phone,
+// } from "lucide-react";
+
+// const CreateDeliveryChallan = () => {
+//   const navigate = useNavigate();
+//   const location = useLocation();
+//   const queryParams = new URLSearchParams(location.search);
+//   const editId = queryParams.get("edit");
+
+//   const [userData, setUserData] = useState(
+//     JSON.parse(localStorage.getItem("eBilling") || "{}")
+//   );
+
+//   const token = userData?.accessToken;
+//   const companyId = userData?.selectedCompany?.id;
+
+//   const [loading, setLoading] = useState(false);
+//   const [loadingData, setLoadingData] = useState(false);
+//   const [loadingItems, setLoadingItems] = useState(false);
+//   const [parties, setParties] = useState([]);
+//   const [items, setItems] = useState([]);
+
+//   const states = [
+//     "ANDHRA_PRADESH", "ARUNACHAL_PRADESH", "ASSAM", "BIHAR", "CHHATTISGARH", "GOA", "GUJARAT", "HARYANA",
+//     "HIMACHAL_PRADESH", "JHARKHAND", "KARNATAKA", "KERALA", "MADHYA_PRADESH", "MAHARASHTRA", "MANIPUR",
+//     "MEGHALAYA", "MIZORAM", "NAGALAND", "ODISHA", "PUNJAB", "RAJASTHAN", "SIKKIM", "TAMIL_NADU", "TELANGANA",
+//     "TRIPURA", "UTTAR_PRADESH", "UTTARAKHAND", "WEST_BENGAL", "OTHER",
+//   ];
+
+//   const units = [
+//     "CARTONS", "KILOGRAMS", "QUINTAL", "BOTTLES", "PIECES", "ROLLS", "NUMBERS", "PAIRS", "TABLETS",
+//     "MILLILITRE", "BUNDLES", "BOX", "SQUARE_METERS", "BAGS", "CANS", "SQUARE_FEET",
+//   ];
+
+//   const taxTypes = ["WITHTAX", "WITHOUTTAX"];
+//   const taxRates = [
+//     "NONE", "EXEMPTED", "GST0", "IGST0", "GST0POINT25", "IGST0POINT25",
+//     "GST3", "IGST3", "GST5", "IGST5", "GST12", "IGST12",
+//     "GST18", "IGST18", "GST28", "IGST28",
+//   ];
+
+//   const TAX_RATE_MAP = {
+//     NONE: 0, EXEMPTED: 0,
+//     GST0: 0, IGST0: 0,
+//     GST0POINT25: 0.0025, IGST0POINT25: 0.0025,
+//     GST3: 0.03, IGST3: 0.03,
+//     GST5: 0.05, IGST5: 0.05,
+//     GST12: 0.12, IGST12: 0.12,
+//     GST18: 0.18, IGST18: 0.18,
+//     GST28: 0.28, IGST28: 0.28,
+//   };
+
+//   const [form, setForm] = useState({
+//     partyId: "",
+//     partyPhone: "",
+//     challanNo: "",
+//     challanDate: new Date().toISOString().split("T")[0],
+//     dueDate: "",
+//     stateOfSupply: "MAHARASHTRA",
+//     description: "",
+//     items: [],
+//     totalQuantity: 0,
+//     totalDiscountAmount: 0,
+//     totalTaxAmount: 0,
+//     totalAmount: 0,
+//   });
+
+//   // Sync userData
+//   useEffect(() => {
+//     const handleStorageChange = () => {
+//       const updated = JSON.parse(localStorage.getItem("eBilling") || "{}");
+//       setUserData(updated);
+//     };
+
+//     window.addEventListener("storage", handleStorageChange);
+//     return () => window.removeEventListener("storage", handleStorageChange);
+//   }, []);
+
+//   // Auth check
+//   useEffect(() => {
+//     if (!token) {
+//       toast.info("Please log in to continue.");
+//       navigate("/login");
+//       return;
+//     }
+//     if (!companyId) {
+//       toast.info("Please select a company first.");
+//       navigate("/company-list");
+//       return;
+//     }
+//   }, [token, companyId, navigate]);
+
+//   /* ==================== AUTO-FILL PHONE & STATE ON PARTY SELECT ==================== */
+//   useEffect(() => {
+//     if (!form.partyId || parties.length === 0) return;
+
+//     const selectedParty = parties.find((p) => p.partyId === Number(form.partyId));
+//     if (selectedParty) {
+//       setForm((prev) => ({
+//         ...prev,
+//         partyPhone: selectedParty.phoneNo || "",
+//         stateOfSupply: selectedParty.state || prev.stateOfSupply,
+//       }));
+//     }
+//   }, [form.partyId, parties]);
+
+//   /* ==================== FETCH DATA ==================== */
+//   const fetchParties = async () => {
+//     try {
+//       const res = await api.get(`/company/${companyId}/parties`);
+//       setParties(res.data || []);
+//     } catch (err) {
+//       toast.error("Failed to load parties");
+//     }
+//   };
+
+//   const fetchItems = async () => {
+//     setLoadingItems(true);
+//     try {
+//       const res = await api.get(`/company/${companyId}/items`);
+//       setItems(res.data || []);
+//     } catch (err) {
+//       toast.error("Failed to load items");
+//     } finally {
+//       setLoadingItems(false);
+//     }
+//   };
+
+//   const fetchDeliveryChallan = async (challanId) => {
+//     setLoadingData(true);
+//     try {
+//       const res = await api.get(`/delivery-challan/${challanId}`);
+//       const c = res.data;
+
+//       const challanItems = c.deliveryChallanItemResponses?.map((it) => ({
+//         itemId: it.itemId?.toString() || "",
+//         itemName: it.name || "",
+//         itemHsnCode: it.hsn || "",
+//         quantity: it.quantity?.toString() || "",
+//         unit: it.unit || "PIECES",
+//         ratePerUnit: it.ratePerUnit?.toString() || "",
+//         taxType: it.taxType || "WITHTAX",
+//         discountAmount: (it.discountAmount || 0).toString(),
+//         taxRate: it.taxRate || "GST18",
+//         totalTaxAmount: it.totalTaxAmount || 0,
+//         totalAmount: it.totalAmount || 0,
+//       })) || [];
+
+//       setForm({
+//         partyId: c.partyResponseDto?.partyId?.toString() || "",
+//         partyPhone: c.partyResponseDto?.phoneNo || "",
+//         challanNo: c.challanNo || "",
+//         challanDate: c.challanDate?.split("T")[0] || "",
+//         dueDate: c.dueDate?.split("T")[0] || "",
+//         stateOfSupply: c.stateOfSupply || "MAHARASHTRA",
+//         description: c.description || "",
+//         items: challanItems,
+//         totalQuantity: c.totalQuantity || 0,
+//         totalDiscountAmount: c.totalDiscountAmount || 0,
+//         totalTaxAmount: c.totalTaxAmount || 0,
+//         totalAmount: c.totalAmount || 0,
+//       });
+//     } catch (err) {
+//       toast.error(err.response?.data?.message || "Failed to load challan");
+//       navigate("/delivery");
+//     } finally {
+//       setLoadingData(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (token && companyId) {
+//       fetchParties();
+//       fetchItems();
+//       if (editId) fetchDeliveryChallan(editId);
+//     }
+//   }, [token, companyId, editId]);
+
+//   /* ==================== ITEM HANDLING ==================== */
+//   const handleItemSelect = (index, itemId) => {
+//     const selected = items.find((i) => i.itemId?.toString() === itemId);
+//     const newItems = [...form.items];
+
+//     if (!selected) {
+//       newItems[index] = {
+//         ...newItems[index],
+//         itemId: "",
+//         itemName: "",
+//         itemHsnCode: "",
+//         quantity: "",
+//         unit: "PIECES",
+//         ratePerUnit: "",
+//         taxType: "WITHTAX",
+//         discountAmount: "0",
+//         taxRate: "GST18",
+//         totalTaxAmount: 0,
+//         totalAmount: 0,
+//       };
+//       recalculateTotals(newItems);
+//       return;
+//     }
+
+//     newItems[index] = {
+//       ...newItems[index],
+//       itemId: selected.itemId?.toString(),
+//       itemName: selected.itemName,
+//       itemHsnCode: selected.itemHsn || "",
+//       unit: selected.baseUnit || "PIECES",
+//       ratePerUnit: selected.salePrice?.toString() || selected.purchasePrice?.toString() || "",
+//       taxType: selected.saleTaxType || selected.purchaseTaxType || "WITHTAX",
+//       taxRate: selected.taxRate || "GST18",
+//       quantity: newItems[index].quantity || "1",
+//       discountAmount: "0",
+//     };
+
+//     recalculateTotals(newItems);
+//   };
+
+//   const handleItemChange = (index, field, value) => {
+//     const newItems = [...form.items];
+//     newItems[index][field] = value;
+//     recalculateTotals(newItems);
+//   };
+
+//   const addItem = () => {
+//     setForm((prev) => ({
+//       ...prev,
+//       items: [
+//         ...prev.items,
+//         {
+//           itemId: "",
+//           itemName: "",
+//           itemHsnCode: "",
+//           quantity: "",
+//           unit: "PIECES",
+//           ratePerUnit: "",
+//           taxType: "WITHTAX",
+//           discountAmount: "0",
+//           taxRate: "GST18",
+//           totalTaxAmount: 0,
+//           totalAmount: 0,
+//         },
+//       ],
+//     }));
+//   };
+
+//   const removeItem = (index) => {
+//     const newItems = form.items.filter((_, i) => i !== index);
+//     recalculateTotals(newItems);
+//   };
+
+//   /* ==================== CALCULATIONS ==================== */
+//   const calculateItem = (item) => {
+//     const qty = parseFloat(item.quantity) || 0;
+//     const rate = parseFloat(item.ratePerUnit) || 0;
+//     const discount = parseFloat(item.discountAmount) || 0;
+//     const taxRate = TAX_RATE_MAP[item.taxRate] || 0;
+//     const withTax = item.taxType === "WITHTAX";
+
+//     let subtotal = qty * rate - discount;
+//     let taxAmount = 0;
+
+//     if (withTax && taxRate > 0) {
+//       const taxable = subtotal / (1 + taxRate);
+//       taxAmount = subtotal - taxable;
+//       subtotal = taxable;
+//     } else {
+//       taxAmount = subtotal * taxRate;
+//     }
+
+//     const total = subtotal + taxAmount;
+
+//     return {
+//       ...item,
+//       totalTaxAmount: parseFloat(taxAmount.toFixed(2)),
+//       totalAmount: parseFloat(total.toFixed(2)),
+//     };
+//   };
+
+//   const recalculateTotals = (newItems = form.items) => {
+//     const calculated = newItems.map(calculateItem);
+//     const totalQty = calculated.reduce((s, i) => s + (parseFloat(i.quantity) || 0), 0);
+//     const totalDiscount = calculated.reduce((s, i) => s + (parseFloat(i.discountAmount) || 0), 0);
+//     const totalTax = calculated.reduce((s, i) => s + i.totalTaxAmount, 0);
+//     const totalAmt = calculated.reduce((s, i) => s + i.totalAmount, 0);
+
+//     setForm((prev) => ({
+//       ...prev,
+//       items: calculated,
+//       totalQuantity: parseFloat(totalQty.toFixed(2)),
+//       totalDiscountAmount: parseFloat(totalDiscount.toFixed(2)),
+//       totalTaxAmount: parseFloat(totalTax.toFixed(2)),
+//       totalAmount: parseFloat(totalAmt.toFixed(2)),
+//     }));
+//   };
+
+//   /* ==================== SUBMIT ==================== */
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+
+//     if (!form.partyId || !form.challanNo || !form.challanDate) {
+//       toast.error("Please fill all required fields");
+//       return;
+//     }
+
+//     const invalidItem = form.items.some(
+//       (i) =>
+//         !i.itemName ||
+//         !i.quantity ||
+//         parseFloat(i.quantity) <= 0 ||
+//         !i.ratePerUnit ||
+//         parseFloat(i.ratePerUnit) <= 0
+//     );
+//     if (invalidItem) {
+//       toast.error("Each item must have valid name, quantity > 0, and rate > 0");
+//       return;
+//     }
+
+//     const payload = {
+//       partyId: Number(form.partyId),
+//       challanNo: form.challanNo.trim(),
+//       challanDate: form.challanDate,
+//       dueDate: form.dueDate || null,
+//       stateOfSupply: form.stateOfSupply,
+//       description: form.description.trim() || null,
+//       totalQuantity: form.totalQuantity,
+//       totalDiscountAmount: form.totalDiscountAmount,
+//       totalTaxAmount: form.totalTaxAmount,
+//       totalAmount: form.totalAmount,
+//       deliveryChallanItemRequests: form.items.map((i) => ({
+//         itemId: i.itemId ? Number(i.itemId) : null,
+//         name: i.itemName.trim(),
+//         quantity: parseFloat(i.quantity),
+//         unit: i.unit,
+//         ratePerUnit: parseFloat(i.ratePerUnit),
+//         taxType: i.taxType,
+//         discountAmount: parseFloat(i.discountAmount) || 0,
+//         taxRate: i.taxRate,
+//         totalTaxAmount: i.totalTaxAmount,
+//         totalAmount: i.totalAmount,
+//       })),
+//     };
+
+//     try {
+//       setLoading(true);
+//       if (editId) {
+//         await api.put(`/delivery-challan/${editId}`, payload);
+//         toast.success("Delivery Challan updated!");
+//       } else {
+//         await api.post(`/company/${companyId}/create/delivery-challan`, payload);
+//         toast.success("Delivery Challan created!");
+//       }
+//       navigate("/delivery");
+//     } catch (err) {
+//       toast.error(err.response?.data?.message || "Operation failed");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const isEditMode = !!editId;
+
+//   return (
+//     <div className={styles.container}>
+//       {(loading || loadingData) && (
+//         <div className={styles.loadingContainer}>
+//           <Loader className={styles.spinnerIcon} />
+//           <p>{loadingData ? "Loading challan..." : "Saving..."}</p>
+//         </div>
+//       )}
+
+//       <form onSubmit={handleSubmit} className={styles.form}>
+//         {/* HEADER */}
+//         <div className={styles.header}>
+//           <div className={styles.headerContent}>
+//             <div className={styles.titleSection}>
+//               <h1 className={styles.title}>
+//                 {isEditMode ? (
+//                   <>
+//                     <Truck className={styles.titleIcon} />
+//                     Edit Delivery Challan
+//                   </>
+//                 ) : (
+//                   <>
+//                     <FileText className={styles.titleIcon} />
+//                     Create Delivery Challan
+//                   </>
+//                 )}
+//               </h1>
+//               <p className={styles.subtitle}>
+//                 {isEditMode ? `Challan #${form.challanNo}` : "Non-taxable delivery of goods"}
+//               </p>
+//             </div>
+//           </div>
+//           <div className={styles.headerActions}>
+//             <button
+//               type="button"
+//               onClick={() => navigate("/delivery")}
+//               className={styles.buttonSecondary}
+//               disabled={loading}
+//             >
+//               <ArrowLeft size={18} />
+//               Back
+//             </button>
+//             <button type="submit" className={styles.buttonPrimary} disabled={loading || loadingData}>
+//               {loading ? (
+//                 <>
+//                   <Loader size={18} className={styles.spinnerSmall} />
+//                   Saving...
+//                 </>
+//               ) : (
+//                 <>
+//                   <CheckCircle size={18} />
+//                   {isEditMode ? "Update Challan" : "Create Challan"}
+//                 </>
+//               )}
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* PARTY INFO */}
+//         <div className={styles.formSection}>
+//           <h2 className={styles.sectionTitle}>
+//             <Users size={20} />
+//             Party Information
+//           </h2>
+//           <div className={styles.formGrid}>
+//             <div className={styles.formGroup}>
+//               <label className={styles.label}>
+//                 Party <span className={styles.required}>*</span>
+//               </label>
+//               <select
+//                 value={form.partyId}
+//                 onChange={(e) => setForm({ ...form, partyId: e.target.value })}
+//                 required
+//                 className={styles.input}
+//                 disabled={loadingData}
+//               >
+//                 <option value="">Select Party</option>
+//                 {parties.map((p) => (
+//                   <option key={p.partyId} value={p.partyId}>
+//                     {p.name} - {p.phoneNo || "No Phone"}
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+
+//             <div className={styles.formGroup}>
+//               <label className={styles.label}>
+//                 Challan Number <span className={styles.required}>*</span>
+//               </label>
+//               <input
+//                 type="text"
+//                 value={form.challanNo}
+//                 onChange={(e) => setForm({ ...form, challanNo: e.target.value })}
+//                 required
+//                 className={styles.input}
+//                 placeholder="e.g. DC-001"
+//                 disabled={loadingData}
+//               />
+//             </div>
+
+//             <div className={styles.formGroup}>
+//               <label className={styles.label}>Phone No</label>
+//               <div className={styles.inputIcon}>
+//                 <Phone size={18} />
+//                 <input
+//                   type="text"
+//                   value={form.partyPhone}
+//                   readOnly
+//                   className={`${styles.input} ${styles.inputReadonly}`}
+//                   placeholder="Auto-filled"
+//                 />
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* DATES */}
+//         <div className={styles.formSection}>
+//           <h2 className={styles.sectionTitle}>
+//             <Calendar size={20} />
+//             Important Dates
+//           </h2>
+//           <div className={styles.formGrid}>
+//             <div className={styles.formGroup}>
+//               <label className={styles.label}>
+//                 Challan Date <span className={styles.required}>*</span>
+//               </label>
+//               <input
+//                 type="date"
+//                 value={form.challanDate}
+//                 onChange={(e) => setForm({ ...form, challanDate: e.target.value })}
+//                 required
+//                 className={styles.input}
+//                 disabled={loadingData}
+//               />
+//             </div>
+
+//             <div className={styles.formGroup}>
+//               <label className={styles.label}>Due Date</label>
+//               <input
+//                 type="date"
+//                 value={form.dueDate}
+//                 onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+//                 min={form.challanDate}
+//                 className={styles.input}
+//                 disabled={loadingData}
+//               />
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* STATE OF SUPPLY */}
+//         <div className={styles.formSection}>
+//           <h2 className={styles.sectionTitle}>
+//             <MapPin size={20} />
+//             Location
+//           </h2>
+//           <div className={styles.formGrid}>
+//             <div className={styles.formGroup}>
+//               <label className={styles.label}>State of Supply</label>
+//               <div className={styles.inputIcon}>
+//                 <MapPin size={18} />
+//                 <select
+//                   value={form.stateOfSupply}
+//                   onChange={(e) => setForm({ ...form, stateOfSupply: e.target.value })}
+//                   className={styles.input}
+//                   disabled={loadingData}
+//                 >
+//                   {states.map((s) => (
+//                     <option key={s} value={s}>
+//                       {s.replace(/_/g, " ")}
+//                     </option>
+//                   ))}
+//                 </select>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* DESCRIPTION */}
+//         <div className={styles.formSection}>
+//           <label className={styles.label}>Description</label>
+//           <textarea
+//             value={form.description}
+//             onChange={(e) => setForm({ ...form, description: e.target.value })}
+//             className={`${styles.input} ${styles.textarea}`}
+//             rows={3}
+//             placeholder="Optional notes..."
+//             disabled={loadingData}
+//           />
+//         </div>
+
+//         {/* ITEMS TABLE */}
+//         <div className={styles.formSection}>
+//           <div className={styles.itemsHeader}>
+//             <h2 className={styles.sectionTitle}>
+//               <Package size={20} />
+//               Items
+//             </h2>
+//             <button type="button" onClick={addItem} className={styles.buttonAdd} disabled={loadingData}>
+//               <Plus size={18} />
+//               Add Item
+//             </button>
+//           </div>
+
+//           <div className={styles.tableContainer}>
+//             <table className={styles.itemsTable}>
+//               <thead>
+//                 <tr>
+//                   <th>No</th>
+//                   <th>Item Name</th>
+//                   <th>HSN</th>
+//                   <th>Qty</th>
+//                   <th>Unit</th>
+//                   <th>Rate</th>
+//                   <th>Discount</th>
+//                   <th>Tax Type</th>
+//                   <th>Tax Rate</th>
+//                   <th>Tax ₹</th>
+//                   <th>Total ₹</th>
+//                   <th></th>
+//                 </tr>
+//               </thead>
+//               <tbody>
+//                 {form.items.map((item, idx) => (
+//                   <tr key={idx}>
+//                     <td className={styles.rowNumber}>{idx + 1}</td>
+//                     <td>
+//                       <select
+//                         value={item.itemId || ""}
+//                         onChange={(e) => handleItemSelect(idx, e.target.value)}
+//                         className={styles.tableSelect}
+//                         disabled={loadingData}
+//                       >
+//                         <option value="">-- Select --</option>
+//                         {items.map((i) => (
+//                           <option key={i.itemId} value={i.itemId}>
+//                             {i.itemName}
+//                           </option>
+//                         ))}
+//                       </select>
+//                     </td>
+//                     <td>
+//                       <input
+//                         type="text"
+//                         value={item.itemHsnCode}
+//                         readOnly
+//                         className={styles.tableInputReadonly}
+//                       />
+//                     </td>
+//                     <td>
+//                       <input
+//                         type="number"
+//                         step="0.01"
+//                         min="0.01"
+//                         value={item.quantity}
+//                         onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
+//                         className={styles.tableInput}
+//                         disabled={loadingData}
+//                       />
+//                     </td>
+//                     <td>
+//                       <select
+//                         value={item.unit}
+//                         onChange={(e) => handleItemChange(idx, "unit", e.target.value)}
+//                         className={styles.tableSelect}
+//                         disabled={loadingData}
+//                       >
+//                         {units.map((u) => (
+//                           <option key={u} value={u}>{u}</option>
+//                         ))}
+//                       </select>
+//                     </td>
+//                     <td>
+//                       <input
+//                         type="number"
+//                         step="0.01"
+//                         value={item.ratePerUnit}
+//                         onChange={(e) => handleItemChange(idx, "ratePerUnit", e.target.value)}
+//                         className={styles.tableInput}
+//                         disabled={loadingData}
+//                       />
+//                     </td>
+//                     <td>
+//                       <input
+//                         type="number"
+//                         step="0.01"
+//                         min="0"
+//                         value={item.discountAmount}
+//                         onChange={(e) => handleItemChange(idx, "discountAmount", e.target.value)}
+//                         className={styles.tableInput}
+//                         disabled={loadingData}
+//                       />
+//                     </td>
+//                     <td>
+//                       <select
+//                         value={item.taxType}
+//                         onChange={(e) => handleItemChange(idx, "taxType", e.target.value)}
+//                         className={styles.tableSelect}
+//                         disabled={loadingData}
+//                       >
+//                         {taxTypes.map((t) => (
+//                           <option key={t} value={t}>
+//                             {t === "WITHTAX" ? "Inc. Tax" : "Ex. Tax"}
+//                           </option>
+//                         ))}
+//                       </select>
+//                     </td>
+//                     <td>
+//                       <select
+//                         value={item.taxRate}
+//                         onChange={(e) => handleItemChange(idx, "taxRate", e.target.value)}
+//                         className={styles.tableSelect}
+//                         disabled={loadingData}
+//                       >
+//                         {taxRates.map((r) => (
+//                           <option key={r} value={r}>
+//                             {r.replace("GST", "").replace("IGST", "") || "0%"}
+//                           </option>
+//                         ))}
+//                       </select>
+//                     </td>
+//                     <td className={styles.amountCell}>
+//                       <IndianRupee size={14} />
+//                       {item.totalTaxAmount.toFixed(2)}
+//                     </td>
+//                     <td className={styles.amountCell}>
+//                       <IndianRupee size={14} />
+//                       <strong>{item.totalAmount.toFixed(2)}</strong>
+//                     </td>
+//                     <td>
+//                       {form.items.length > 1 && (
+//                         <button
+//                           type="button"
+//                           onClick={() => removeItem(idx)}
+//                           className={styles.tableDeleteBtn}
+//                           disabled={loadingData}
+//                         >
+//                           <Trash2 size={16} />
+//                         </button>
+//                       )}
+//                     </td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </table>
+
+//             {form.items.length === 0 && (
+//               <div className={styles.emptyTable}>
+//                 <p>No items added yet. Click "Add Item" to start.</p>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* SUMMARY */}
+//         <div className={styles.summarySection}>
+//           <h2 className={styles.sectionTitle}>Challan Summary</h2>
+//           <div className={styles.summaryGrid}>
+//             <div className={styles.summaryItem}>
+//               <span className={styles.summaryLabel}>Total Quantity</span>
+//               <span className={styles.summaryValue}>{form.totalQuantity}</span>
+//             </div>
+//             <div className={styles.summaryItem}>
+//               <span className={styles.summaryLabel}>Total Discount</span>
+//               <span className={styles.summaryValue}>
+//                 <IndianRupee size={14} />
+//                 {form.totalDiscountAmount.toFixed(2)}
+//               </span>
+//             </div>
+//             <div className={styles.summaryItem}>
+//               <span className={styles.summaryLabel}>Total Tax</span>
+//               <span className={styles.summaryValue}>
+//                 <IndianRupee size={14} />
+//                 {form.totalTaxAmount.toFixed(2)}
+//               </span>
+//             </div>
+//             <div className={styles.summaryItem}>
+//               <span className={styles.summaryLabel}>Total Amount</span>
+//               <span className={`${styles.summaryValue} ${styles.summaryValueBold}`}>
+//                 <IndianRupee size={14} />
+//                 {form.totalAmount.toFixed(2)}
+//               </span>
+//             </div>
+//           </div>
+//         </div>
+//       </form>
+//     </div>
+//   );
+// };
+
+// export default CreateDeliveryChallan;
+
+
+
+
+
+
+
+
+
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -2227,6 +3011,44 @@ const CreateDeliveryChallan = () => {
     totalTaxAmount: 0,
     totalAmount: 0,
   });
+
+  // Challan Number Auto-generation
+  const getNextChallanNumberPreview = () => {
+    if (!companyId) return "DC/NEW";
+    const year = new Date().getFullYear();
+    const key = `deliveryChallanCounter_${companyId}_${year}`;
+    const counter = parseInt(localStorage.getItem(key) || "0", 10);
+    return `DC/${year}/${counter + 1}`;
+  };
+
+  const reserveNextChallanNumber = () => {
+    if (!companyId) return "DC/NEW";
+    const year = new Date().getFullYear();
+    const key = `deliveryChallanCounter_${companyId}_${year}`;
+    let counter = parseInt(localStorage.getItem(key) || "0", 10);
+    counter += 1;
+    localStorage.setItem(key, String(counter));
+    return `DC/${year}/${counter}`;
+  };
+
+  // Show preview number when creating new challan
+  useEffect(() => {
+    if (editId || !companyId) return;
+    const preview = getNextChallanNumberPreview();
+    setForm(prev => ({ ...prev, challanNo: preview }));
+  }, [editId, companyId]);
+
+  const handleChallanNoChange = (e) => {
+    let value = e.target.value.trim().toUpperCase();
+
+    if (value === "DC" || value === "DC/" || value.startsWith("DC/")) {
+      const nextNumber = reserveNextChallanNumber();
+      setForm(prev => ({ ...prev, challanNo: nextNumber }));
+      return;
+    }
+
+    setForm(prev => ({ ...prev, challanNo: value }));
+  };
 
   // Sync userData
   useEffect(() => {
@@ -2512,6 +3334,14 @@ const CreateDeliveryChallan = () => {
       } else {
         await api.post(`/company/${companyId}/create/delivery-challan`, payload);
         toast.success("Delivery Challan created!");
+
+        // Increment counter only after successful creation
+        if (companyId) {
+          const year = new Date().getFullYear();
+          const key = `deliveryChallanCounter_${companyId}_${year}`;
+          const current = parseInt(localStorage.getItem(key) || "0", 10);
+          localStorage.setItem(key, String(current + 1));
+        }
       }
       navigate("/delivery");
     } catch (err) {
@@ -2615,11 +3445,11 @@ const CreateDeliveryChallan = () => {
               <input
                 type="text"
                 value={form.challanNo}
-                onChange={(e) => setForm({ ...form, challanNo: e.target.value })}
+                onChange={handleChallanNoChange}
                 required
                 className={styles.input}
-                placeholder="e.g. DC-001"
-                disabled={loadingData}
+                placeholder="Type DC to auto-generate"
+                disabled={loadingData || isEditMode}
               />
             </div>
 
@@ -2754,6 +3584,7 @@ const CreateDeliveryChallan = () => {
                       <select
                         value={item.itemId || ""}
                         onChange={(e) => handleItemSelect(idx, e.target.value)}
+                        required
                         className={styles.tableSelect}
                         disabled={loadingData}
                       >
@@ -2780,6 +3611,7 @@ const CreateDeliveryChallan = () => {
                         min="0.01"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
+                        required
                         className={styles.tableInput}
                         disabled={loadingData}
                       />
@@ -2802,6 +3634,7 @@ const CreateDeliveryChallan = () => {
                         step="0.01"
                         value={item.ratePerUnit}
                         onChange={(e) => handleItemChange(idx, "ratePerUnit", e.target.value)}
+                        required
                         className={styles.tableInput}
                         disabled={loadingData}
                       />
@@ -2909,6 +3742,41 @@ const CreateDeliveryChallan = () => {
             </div>
           </div>
         </div>
+        {/* FORM ACTION BUTTONS */}
+        <div className={styles.formActions}>
+            <button
+              type="button"
+              onClick={() => navigate("/delivery")}
+              className={styles.buttonSecondary}
+              disabled={loading || loadingData}
+            >
+              <ArrowLeft size={18} />
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              className={styles.buttonPrimary}
+              disabled={loading || loadingData}
+            >
+              {loading ? (
+                <>
+                  <Loader size={18} className={styles.spinnerSmall} />
+                  {isEditMode ? "Updating..." : "Creating..."}
+                </>
+              ) : isEditMode ? (
+                <>
+                  <CheckCircle size={18} />
+                  Update Challan
+                </>
+              ) : (
+                <>
+                  <CheckCircle size={18} />
+                  Create Challan
+                </>
+              )}
+            </button>
+          </div>
       </form>
     </div>
   );

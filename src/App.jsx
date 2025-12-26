@@ -57,6 +57,8 @@ import Bill_Profit_Loss_Report from "./pages/admin/reports/Profit Loss Report/Bi
 import Purchase_Report from "./pages/admin/reports/Purchase Report/Purchase_Report";
 import Sale_Report from "./pages/admin/reports/Sale Report/ Sale";
 import Statement_List from "./pages/admin/reports/Statement List/Statement_List";
+import Register from "./pages/auth/register/Register";
+import ForgotPassword from "./pages/auth/forgot-password/ForgotPassword";
 const App = () => {
   return (
     <Router>
@@ -64,7 +66,8 @@ const App = () => {
       <Routes>
         {/* ================= Public Routes ================= */}
         <Route path="/login" element={<Login />} />
-        {/* <Route path="/register" element={<Register />} /> */}
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/subscription-plans" element={<SubscriptionPlans />} />
         <Route path="/company-list" element={<CompanyList />} />
         <Route path="/create-company" element={<CreateCompany />} />

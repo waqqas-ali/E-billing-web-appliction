@@ -3277,6 +3277,41 @@ const Add_Items = () => {
             </div>
           </div>
         )}
+        {/* FORM ACTION BUTTONS */}
+        <div className={styles.formActions}>
+            <button
+              type="button"
+              onClick={() => navigate("/items")}
+              className={styles.buttonSecondary}
+              disabled={loading}
+            >
+              <ArrowLeft size={18} />
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              className={styles.buttonPrimary}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader size={18} className={styles.spinnerSmall} />
+                  Saving...
+                </>
+              ) : isEditMode ? (
+                <>
+                  <CheckCircle size={18} />
+                  Update Item
+                </>
+              ) : (
+                <>
+                  <CheckCircle size={18} />
+                  Create Item
+                </>
+              )}
+            </button>
+          </div>
       </form>
     </div>
   );

@@ -2275,6 +2275,7 @@ import {
   Trash2,
   X,
   Package,
+  Printer,
   AlertCircle,
   CheckCircle,
   ChevronDown,
@@ -2383,6 +2384,243 @@ const SalesReturns = () => {
       r.partyResponseDto?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
+  const handlePrint = (returnData) => {
+    const printWindow = window.open("", "_blank");
+
+    if (!printWindow) {
+      toast.error("Please allow popups for this site to enable printing");
+      return;
+    }
+
+    // Safe date formatting
+    const formatDate = (dateStr) => {
+      return dateStr
+        ? new Date(dateStr).toLocaleDateString('en-IN', {
+          day: '2-digit', month: 'short', year: 'numeric'
+        })
+        : "—";
+    };
+
+    // Basic HTML escape to prevent XSS
+    const escapeHtml = (unsafe = "") => {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Sale Return ${escapeHtml(returnData.returnNo || '—')}</title>
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 1.2cm;
+          }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #000;
+            font-size: 10pt;
+            line-height: 1.4;
+            background: white;
+          }
+          .container {
+            max-width: 19cm;
+            margin: 0 auto;
+            padding: 0.8cm;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 0.6cm;
+            margin-bottom: 0.8cm;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 18pt;
+            color: #000;
+          }
+          .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1cm;
+          }
+          .info-box {
+            width: 48%;
+          }
+          .info-box h3 {
+            font-size: 12pt;
+            margin: 0 0 6px 0;
+            border-bottom: 1px solid #000;
+            padding-bottom: 4px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.8cm 0;
+            font-size: 9.5pt;
+          }
+          th, td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            text-align: left;
+          }
+          th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
+          .text-right {
+            text-align: right;
+          }
+          .total-section {
+            display: flex;
+            justify-content: flex-end;
+            margin: 1cm 0;
+          }
+          .total-box {
+            width: 45%;
+            border: 1px solid #000;
+          }
+          .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border-bottom: 1px solid #eee;
+          }
+          .total-row:last-child {
+            border-bottom: none;
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
+          .footer {
+            text-align: center;
+            font-size: 8.5pt;
+            color: #555;
+            border-top: 1px solid #000;
+            padding-top: 0.6cm;
+            margin-top: 1.5cm;
+          }
+          @media print {
+            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>SALE RETURN</h1>
+            <p>
+              <strong>Return No:</strong> ${escapeHtml(returnData.returnNo || '—')} 
+              | <strong>Return Date:</strong> ${formatDate(returnData.returnDate)}
+              | <strong>Original Invoice:</strong> ${escapeHtml(returnData.invoiceNo || '—')}
+            </p>
+            <p><strong>Status:</strong> ${returnData.balanceAmount > 0 ? 'Pending' : 'Settled'}</p>
+          </div>
+  
+          <div class="info-section">
+            <div class="info-box">
+              <h3>From (Company):</h3>
+              <p><strong>${escapeHtml(userData?.selectedCompany?.name || 'Your Company')}</strong></p>
+              <p>${escapeHtml(userData?.selectedCompany?.billingAddress || '—')}</p>
+              <p><strong>GSTIN:</strong> ${escapeHtml(userData?.selectedCompany?.gstin || '—')}</p>
+            </div>
+            <div class="info-box">
+              <h3>Return From (Party):</h3>
+              <p><strong>${escapeHtml(returnData.partyResponseDto?.name || '—')}</strong></p>
+              <p>${escapeHtml(returnData.partyResponseDto?.billingAddress || '—')}</p>
+              <p><strong>GSTIN:</strong> ${escapeHtml(returnData.partyResponseDto?.gstin || '—')}</p>
+            </div>
+          </div>
+  
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>Qty Returned</th>
+                <th>Unit</th>
+                <th>Rate (₹)</th>
+                <th>Tax (%)</th>
+                <th>Tax Amt (₹)</th>
+                <th>Discount (₹)</th>
+                <th>Total (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(returnData.saleReturnItemResponses || []).map((item, i) => `
+                <tr>
+                  <td>${i + 1}</td>
+                  <td>${escapeHtml(item.name || item.itemName || '—')}<br>
+                      <small>${escapeHtml(item.description || '')}</small></td>
+                  <td class="text-right">${item.quantity || '—'}</td>
+                  <td>${escapeHtml(item.unit || 'PCS')}</td>
+                  <td class="text-right">${Number(item.ratePerUnit || item.pricePerUnit || 0).toFixed(2)}</td>
+                  <td class="text-right">${item.taxRate || '—'}</td>
+                  <td class="text-right">${Number(item.totalTaxAmount || 0).toFixed(2)}</td>
+                  <td class="text-right">${Number(item.discountAmount || 0).toFixed(2)}</td>
+                  <td class="text-right">${Number(item.totalAmount || 0).toFixed(2)}</td>
+                </tr>
+              `).join('') || '<tr><td colspan="9" class="text-center">No returned items</td></tr>'}
+            </tbody>
+          </table>
+  
+          <div class="total-section">
+            <div class="total-box">
+              <div class="total-row">
+                <span>Subtotal (ex-tax):</span>
+                <span>₹${Number((returnData.totalAmount || 0) - (returnData.totalTaxAmount || 0)).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Total Tax:</span>
+                <span>₹${Number(returnData.totalTaxAmount || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Total Discount:</span>
+                <span>₹${Number(returnData.totalDiscount || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Grand Total (Credit Note):</span>
+                <span>₹${Number(returnData.totalAmount || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Amount Paid/Settled:</span>
+                <span>₹${Number(returnData.paidAmount || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Balance Due:</span>
+                <span>₹${Number(returnData.balanceAmount || 0).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+  
+          <div class="footer">
+            <p>This is a computer-generated credit note / sale return document</p>
+            <p>Goods returned as per original invoice ${escapeHtml(returnData.invoiceNo || '—')}</p>
+          </div>
+        </div>
+  
+        <script>
+          window.onload = function() {
+            setTimeout(() => {
+              window.focus();
+              window.print();
+            }, 600);
+          }
+        </script>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+  };
 
   return (
     <div className={styles["company-form-container"]}>
@@ -2610,6 +2848,14 @@ const SalesReturns = () => {
                   <span>Edit</span>
                 </button>
                 <button
+                  onClick={() => handlePrint(selectedReturn)}
+                  className={`${styles["action-button"]} ${styles["print-button"]}`}
+                  title="Print Return / Credit Note"
+                >
+                  <Printer size={16} />
+                  <span>Print</span>
+                </button>
+                <button
                   onClick={() => deleteReturn(selectedReturn.saleReturnId)}
                   className={`${styles["action-button"]} ${styles["delete-button"]}`}
                   title="Delete return"
@@ -2688,9 +2934,8 @@ const SalesReturns = () => {
                   <span>₹{Number.parseFloat(selectedReturn.paidAmount).toFixed(2)}</span>
                 </div>
                 <div
-                  className={`${styles["breakdown-row"]} ${
-                    selectedReturn.balanceAmount > 0 ? styles["balance-row-pending"] : styles["balance-row-paid"]
-                  }`}
+                  className={`${styles["breakdown-row"]} ${selectedReturn.balanceAmount > 0 ? styles["balance-row-pending"] : styles["balance-row-paid"]
+                    }`}
                 >
                   <span>Balance:</span>
                   <span className={styles["balance-amount"]}>

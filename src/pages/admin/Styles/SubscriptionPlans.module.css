@@ -1,0 +1,292 @@
+.main {
+    min-height: 100vh;
+    padding: 4rem 1.5rem 6rem;
+    background: var(--background-gradient, linear-gradient(to bottom, #f8f9ff, #ffffff));
+  }
+  
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+  }
+  
+  .header h1 {
+    font-size: 2.8rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .plansGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 2rem;
+  }
+  
+  .planCard {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.35s ease;
+    border: 1px solid var(--border-light);
+  }
+  
+  .planCard:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+  }
+  
+  .popular {
+    border: 2px solid var(--primary);
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+  }
+  
+  .popularBadge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    padding: 0.4rem 1.4rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  
+  .planName {
+    font-size: 1.9rem;
+    text-align: center;
+    margin-bottom: 1.75rem;
+  }
+  
+  .pricing {
+    text-align: center;
+    margin-bottom: 2.25rem;
+  }
+  
+  .amount {
+    font-size: 3.8rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  
+  .currency {
+    font-size: 2rem;
+    font-weight: 500;
+    vertical-align: super;
+    margin-right: 0.25rem;
+  }
+  
+  .period {
+    color: var(--text-secondary);
+    font-size: 1.3rem;
+  }
+  
+  .featuresList {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0 2.5rem;
+  }
+  
+  .featuresList li {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.1rem;
+    font-size: 1.05rem;
+  }
+  
+  .checkIcon {
+    color: var(--success);
+    flex-shrink: 0;
+  }
+  
+  .selectBtn {
+    width: 100%;
+    padding: 1.1rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  
+  .selectBtn:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+  }
+  
+  .selectBtn:disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
+  }
+  .currentPlanBanner {
+    background: #e0f7fa;
+    border-radius: 12px;
+    padding: 1.2rem 1.8rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.1rem;
+    color: #006064;
+  }
+  
+  .currentPlanCard {
+    border: 2px solid #0288d1;
+    background: linear-gradient(to bottom, #f0f9ff, #e3f2fd);
+    position: relative;
+  }
+  
+  .currentBadge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0288d1;
+    color: white;
+    padding: 0.4rem 1.2rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  
+  .currentBtn {
+    background: #4caf50 !important;
+    cursor: default;
+  }
+  
+  .expires {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin-top: 0.3rem;
+  }
+  .currentPlanCard {
+    background: #f0f9ff;
+    border: 2px solid #0288d1;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 3rem;
+  }
+  
+  .currentHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .currentPricing {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .currentFeatures ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .currentFeatures li {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .availablePlansSection h2 {
+    text-align: center;
+    margin: 2rem 0 1.5rem;
+    font-size: 1.8rem;
+  }
+  
+  .currentBadge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0288d1;
+    color: white;
+    padding: 0.4rem 1.3rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  
+  .actionBtn {
+    width: 100%;
+    padding: 1rem;
+    background: var(--primary, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .actionBtn:hover:not(:disabled) {
+    background: var(--primary-dark, #1d4ed8);
+  }
+  
+  .limit {
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+  
+  /* States */
+  .loadingWrapper,
+  .errorWrapper,
+  .emptyState {
+    text-align: center;
+    padding: 6rem 1rem;
+  }
+  
+  .spinner {
+    animation: spin 1s linear infinite;
+    color: var(--primary);
+    margin-bottom: 1rem;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .retryBtn {
+    margin-top: 1.5rem;
+    padding: 0.9rem 2rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  
+  .securityNote {
+    text-align: center;
+    margin-top: 3rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+  }

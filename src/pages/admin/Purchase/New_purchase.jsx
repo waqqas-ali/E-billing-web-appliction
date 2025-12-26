@@ -1309,6 +1309,7 @@ import {
   Eye,
   Edit2,
   Trash2,
+  Printer,
   X,
   DollarSign,
   Package,
@@ -1485,7 +1486,242 @@ const PurchasesList = () => {
       p.billNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.partyResponseDto?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const handlePrint = (purchase) => {
+    const printWindow = window.open("", "_blank");
 
+    if (!printWindow) {
+      toast.error("Please allow popups for printing");
+      return;
+    }
+
+    // Safe date formatting
+    const formatDate = (dateStr) => dateStr
+      ? new Date(dateStr).toLocaleDateString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric'
+      })
+      : "—";
+
+    // Basic HTML escape to prevent XSS
+    const escapeHtml = (unsafe = "") => {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Purchase Bill ${escapeHtml(purchase.billNumber || '—')}</title>
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 1.2cm;
+          }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #000;
+            font-size: 10pt;
+            line-height: 1.4;
+            background: white;
+          }
+          .container {
+            max-width: 19cm;
+            margin: 0 auto;
+            padding: 0.8cm;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 0.6cm;
+            margin-bottom: 0.8cm;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 18pt;
+            color: #000;
+          }
+          .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1cm;
+          }
+          .info-box {
+            width: 48%;
+          }
+          .info-box h3 {
+            font-size: 12pt;
+            margin: 0 0 6px 0;
+            border-bottom: 1px solid #000;
+            padding-bottom: 4px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.8cm 0;
+            font-size: 9.5pt;
+          }
+          th, td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            text-align: left;
+          }
+          th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
+          .text-right {
+            text-align: right;
+          }
+          .total-section {
+            display: flex;
+            justify-content: flex-end;
+            margin: 1cm 0;
+          }
+          .total-box {
+            width: 45%;
+            border: 1px solid #000;
+          }
+          .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border-bottom: 1px solid #eee;
+          }
+          .total-row:last-child {
+            border-bottom: none;
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
+          .footer {
+            text-align: center;
+            font-size: 8.5pt;
+            color: #555;
+            border-top: 1px solid #000;
+            padding-top: 0.6cm;
+            margin-top: 1.5cm;
+          }
+          @media print {
+            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>PURCHASE INVOICE</h1>
+            <p>
+              <strong>Bill No:</strong> ${escapeHtml(purchase.billNumber || '—')} 
+              | <strong>Bill Date:</strong> ${formatDate(purchase.billDate)}
+              | <strong>Due Date:</strong> ${formatDate(purchase.dueDate)}
+            </p>
+            <p><strong>Status:</strong> ${purchase.balance > 0 ? 'Pending' : 'Paid'}</p>
+          </div>
+  
+          <div class="info-section">
+            <div class="info-box">
+              <h3>From (Supplier):</h3>
+              <p><strong>${escapeHtml(purchase.partyResponseDto?.name || '—')}</strong></p>
+              <p>${escapeHtml(purchase.partyResponseDto?.billingAddress || '—')}</p>
+              <p><strong>GSTIN:</strong> ${escapeHtml(purchase.partyResponseDto?.gstin || '—')}</p>
+              <p><strong>Phone:</strong> ${escapeHtml(purchase.partyResponseDto?.phoneNo || '—')}</p>
+            </div>
+            <div class="info-box">
+              <h3>Bill To (Company):</h3>
+              <p><strong>${escapeHtml(userData?.selectedCompany?.name || 'Your Company')}</strong></p>
+              <p>${escapeHtml(userData?.selectedCompany?.billingAddress || '—')}</p>
+              <p><strong>GSTIN:</strong> ${escapeHtml(userData?.selectedCompany?.gstin || '—')}</p>
+            </div>
+          </div>
+  
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>HSN</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Rate (₹)</th>
+                <th>Tax (%)</th>
+                <th>Tax Amt (₹)</th>
+                <th>Total (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(purchase.purchaseItemResponses || []).map((item, i) => `
+                <tr>
+                  <td>${i + 1}</td>
+                  <td>${escapeHtml(item.itemName || '—')}<br>
+                      <small>${escapeHtml(item.itemDescription || '')}</small></td>
+                  <td>${escapeHtml(item.itemHsnCode || '—')}</td>
+                  <td class="text-right">${item.quantity || '—'}</td>
+                  <td>${escapeHtml(item.unit || 'PCS')}</td>
+                  <td class="text-right">${Number(item.pricePerUnit || 0).toFixed(2)}</td>
+                  <td class="text-right">${item.taxRate || '—'}</td>
+                  <td class="text-right">${Number(item.totalTaxAmount || 0).toFixed(2)}</td>
+                  <td class="text-right">${Number(item.totalAmount || 0).toFixed(2)}</td>
+                </tr>
+              `).join('') || '<tr><td colspan="9" class="text-center">No items</td></tr>'}
+            </tbody>
+          </table>
+  
+          <div class="total-section">
+            <div class="total-box">
+              <div class="total-row">
+                <span>Subtotal (ex-tax):</span>
+                <span>₹${Number((purchase.totalAmount || 0) - (purchase.totalTaxAmount || 0)).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Total Tax:</span>
+                <span>₹${Number(purchase.totalTaxAmount || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Delivery / Other Charges:</span>
+                <span>₹${Number(purchase.deliveryCharges || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Grand Total:</span>
+                <span>₹${Number(purchase.totalAmount || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Amount Paid:</span>
+                <span>₹${Number(purchase.sendAmount || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Balance Due:</span>
+                <span>₹${Number(purchase.balance || 0).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+  
+          <div class="footer">
+            <p>Thank you for your supply | This is a computer-generated document</p>
+            <p>Payment due by ${formatDate(purchase.dueDate)}. Late payments may attract interest.</p>
+          </div>
+        </div>
+  
+        <script>
+          window.onload = function() {
+            setTimeout(() => {
+              window.focus();
+              window.print();
+            }, 600);
+          }
+        </script>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+  };
   /* ----------------------- RENDER ----------------------- */
   return (
     <div className={styles["company-form-container"]}>
@@ -1685,7 +1921,14 @@ const PurchasesList = () => {
                     <span>Add Payment</span>
                   </button>
                 )}
-
+                <button
+                  onClick={() => handlePrint(selectedPurchase)}
+                  className={`${styles["action-button"]} ${styles["print-button"]}`}
+                  title="Print Purchase Bill"
+                >
+                  <Printer size={16} />
+                  <span>Print</span>
+                </button>
                 <button
                   onClick={() => deletePurchase(selectedPurchase.purchaseId)}
                   className={`${styles["action-button"]} ${styles["delete-button"]}`}
@@ -1753,9 +1996,8 @@ const PurchasesList = () => {
                   <span>₹{parseFloat(selectedPurchase.sendAmount || 0).toFixed(2)}</span>
                 </div>
                 <div
-                  className={`${styles["breakdown-row"]} ${
-                    selectedPurchase.balance > 0 ? styles["balance-row-pending"] : styles["balance-row-paid"]
-                  }`}
+                  className={`${styles["breakdown-row"]} ${selectedPurchase.balance > 0 ? styles["balance-row-pending"] : styles["balance-row-paid"]
+                    }`}
                 >
                   <span>Balance:</span>
                   <span className={styles["balance-amount"]}>

@@ -220,9 +220,9 @@ export default function ProfitLossReport() {
           )}
         </div>
 
-        <button onClick={fetchReportData} className={styles.refreshButton} disabled={loading}>
+        {/* <button onClick={fetchReportData} className={styles.refreshButton} disabled={loading}>
           {loading ? "Loading..." : "Refresh Report"}
-        </button>
+        </button> */}
       </div>
 
       {/* Summary Cards */}

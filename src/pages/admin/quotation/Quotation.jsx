@@ -1361,11 +1361,590 @@
 
 
 
+// "use client";
+
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import api from "../../../utils/axiosInstance"; // Shared API with interceptors
+// import { toast } from "react-toastify";
+// import styles from "../Styles/ScreenUI.module.css";
+// import {
+//   Plus,
+//   Eye,
+//   Edit2,
+//   Trash2,
+//   X,
+//   Package,
+//   AlertCircle,
+//   CheckCircle,
+//   ChevronDown,
+//   Search,
+//   Loader,
+// } from "lucide-react";
+
+// // Helper: Map Quotation to Sale Payload
+// const mapQuotationToSalePayload = (quotation) => {
+//   const items = quotation.quotationItemResponses?.map((it) => ({
+//     itemName: it.itemName,
+//     itemHsnCode: it.itemHsnCode || "",
+//     itemDescription: it.itemDescription || "",
+//     quantity: it.quantity,
+//     unit: it.unit,
+//     pricePerUnit: it.pricePerUnit,
+//     pricePerUnitTaxType: it.pricePerUnitTaxType,
+//     taxRate: it.taxRate,
+//     taxAmount: it.totalTaxAmount,
+//     totalAmount: it.totalAmount,
+//   })) ?? [];
+
+//   return {
+//     partyId: quotation.partyResponseDto?.partyId,
+//     billingAddress: quotation.partyResponseDto?.billingAddress || "",
+//     shippingAddress: quotation.partyResponseDto?.shipingAddress || "",
+//     invoiceNumber: `${quotation.referenceNo}-INV`,
+//     invoiceDate: quotation.invoiceDate,
+//     dueDate: quotation.invoiceDate,
+//     saleType: "CASH",
+//     stateOfSupply: quotation.stateOfSupply,
+//     paymentType: "CASH",
+//     paymentDescription: quotation.description || "",
+//     totalAmountWithoutTax: quotation.totalAmountWithoutTax,
+//     totalTaxAmount: quotation.totalTaxAmount,
+//     deliveryCharges: quotation.deliveryCharges || 0,
+//     totalAmount: quotation.totalAmount,
+//     receivedAmount: 0,
+//     balance: quotation.totalAmount,
+//     saleItems: items,
+//     paid: false,
+//     overdue: false,
+//   };
+// };
+
+// const QuotationList = () => {
+//   const navigate = useNavigate();
+
+//   const [userData, setUserData] = useState(
+//     JSON.parse(localStorage.getItem("eBilling") || "{}")
+//   );
+
+//   const token = userData?.accessToken;
+//   const companyId = userData?.selectedCompany?.id;
+
+//   const [quotations, setQuotations] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [selectedQuotation, setSelectedQuotation] = useState(null);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [converting, setConverting] = useState(false);
+
+//   // Sync userData
+//   useEffect(() => {
+//     const handleStorageChange = () => {
+//       const updated = JSON.parse(localStorage.getItem("eBilling") || "{}");
+//       setUserData(updated);
+//     };
+
+//     window.addEventListener("storage", handleStorageChange);
+//     return () => window.removeEventListener("storage", handleStorageChange);
+//   }, []);
+
+//   // Fetch quotations + auth check
+//   useEffect(() => {
+//     if (!token) {
+//       toast.info("Please log in to continue.");
+//       navigate("/login");
+//       return;
+//     }
+//     if (!companyId) {
+//       toast.info("Please select a company first.");
+//       navigate("/company-list");
+//       return;
+//     }
+
+//     const fetchQuotations = async () => {
+//       setLoading(true);
+//       try {
+//         const res = await api.get(`/company/${companyId}/quotations`);
+//         setQuotations(res.data || []);
+//       } catch (err) {
+//         toast.error(err.response?.data?.message || "Failed to load quotations");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchQuotations();
+//   }, [token, companyId, navigate]);
+
+//   const deleteQuotation = async (id) => {
+//     if (!window.confirm("Are you sure you want to delete this quotation? This action cannot be undone.")) {
+//       return;
+//     }
+
+//     try {
+//       setLoading(true);
+//       await api.delete(`/quotation/${id}`);
+//       setQuotations((prev) => prev.filter((q) => q.quotationId !== id));
+//       setSelectedQuotation(null);
+//       toast.success("Quotation deleted successfully");
+//     } catch (err) {
+//       toast.error(err.response?.data?.message || "Failed to delete quotation");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleEdit = (id) => {
+//     navigate(`/create_quotation?edit=${id}`);
+//     setSelectedQuotation(null);
+//   };
+
+//   const handleConvert = async (quotationId) => {
+//     if (converting) return;
+
+//     if (!window.confirm("Convert this quotation to a sale invoice? This action cannot be undone.")) {
+//       return;
+//     }
+
+//     setConverting(true);
+
+//     try {
+//       const res = await api.get(`/quotation/${quotationId}`);
+//       const quotation = res.data;
+
+//       const payload = mapQuotationToSalePayload(quotation);
+
+//       await api.post(`/quotation/${quotationId}/convert-to-sale`, payload);
+
+//       toast.success("Quotation converted to Sale Invoice successfully!");
+
+//       // Refresh list
+//       const refreshed = await api.get(`/company/${companyId}/quotations`);
+//       setQuotations(refreshed.data || []);
+//       setSelectedQuotation(null);
+//     } catch (err) {
+//       toast.error(err.response?.data?.message || "Failed to convert to sale");
+//     } finally {
+//       setConverting(false);
+//     }
+//   };
+
+//   const filteredQuotations = quotations.filter((q) => {
+//     const matchesSearch =
+//       q.referenceNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       q.partyResponseDto?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+//     return matchesSearch;
+//   });
+
+//   return (
+//     <div className={styles["company-form-container"]}>
+//       {/* HEADER */}
+//       <div className={styles["form-header"]}>
+//         <div className={styles["header-content"]}>
+//           <div className={styles["header-icon"]}>
+//             <Package size={32} style={{ color: "var(--primary-color)" }} />
+//           </div>
+//           <div className={styles["header-text"]}>
+//             <h1 className={styles["company-form-title"]}>Quotations</h1>
+//             <p className={styles["form-subtitle"]}>Manage all your quotations</p>
+//           </div>
+//         </div>
+//         <button
+//           onClick={() => navigate("/create_quotation")}
+//           className={styles["submit-button"]}
+//           disabled={loading}
+//         >
+//           <Plus size={18} />
+//           <span>New Quotation</span>
+//         </button>
+//       </div>
+
+//       {/* SEARCH BAR */}
+//       <div className={styles["search-container"]}>
+//         <Search size={18} className={styles["search-icon"]} />
+//         <input
+//           type="text"
+//           placeholder="Search by reference # or party name..."
+//           value={searchTerm}
+//           onChange={(e) => setSearchTerm(e.target.value)}
+//           className={styles["search-input"]}
+//         />
+//       </div>
+
+//       {/* LOADING */}
+//       {loading && !converting && (
+//         <div className={styles["loading-message"]}>
+//           <Loader size={32} className={styles["spinner"]} />
+//           <p>Loading quotations...</p>
+//         </div>
+//       )}
+
+//       {/* TABLE / CARDS */}
+//       {filteredQuotations.length > 0 ? (
+//         <>
+//           {/* Desktop Table */}
+//           <div className={styles["table-wrapper"]}>
+//             <table className={styles.table}>
+//               <thead>
+//                 <tr>
+//                   <th>Ref No</th>
+//                   <th>Date</th>
+//                   <th>Party</th>
+//                   <th>Items</th>
+//                   <th>Total (w/o Tax)</th>
+//                   <th>Tax</th>
+//                   <th>Delivery</th>
+//                   <th>Total</th>
+//                   <th>Type</th>
+//                   <th>Action</th>
+//                 </tr>
+//               </thead>
+//               <tbody>
+//                 {filteredQuotations.map((q) => (
+//                   <tr key={q.quotationId} className={styles["table-row"]}>
+//                     <td className={styles["invoice-cell"]}>
+//                       <span className={styles["invoice-badge"]}>{q.referenceNo}</span>
+//                     </td>
+//                     <td>{new Date(q.invoiceDate).toLocaleDateString()}</td>
+//                     <td>
+//                       <span className={styles["party-name"]}>{q.partyResponseDto?.name || "—"}</span>
+//                     </td>
+//                     <td>{q.quotationItemResponses?.length || 0}</td>
+//                     <td className={styles["amount-cell"]}>
+//                       <span className={styles["amount"]}>
+//                         ₹{Number.parseFloat(q.totalAmountWithoutTax || 0).toFixed(2)}
+//                       </span>
+//                     </td>
+//                     <td className={styles["received-cell"]}>
+//                       ₹{Number.parseFloat(q.totalTaxAmount || 0).toFixed(2)}
+//                     </td>
+//                     <td className={styles["balance-cell"]}>
+//                       <span className={styles["amount"]}>
+//                         ₹{Number.parseFloat(q.deliveryCharges || 0).toFixed(2)}
+//                       </span>
+//                     </td>
+//                     <td className={styles["amount-cell"]}>
+//                       <span className={styles["total-amount"]}>
+//                         ₹{Number.parseFloat(q.totalAmount || 0).toFixed(2)}
+//                       </span>
+//                     </td>
+//                     <td>
+//                       <span
+//                         className={`${styles["status-badge"]} ${
+//                           q.quotationType === "OPEN" ? styles["status-open"] : styles["status-closed"]
+//                         }`}
+//                       >
+//                         {q.quotationType}
+//                       </span>
+//                     </td>
+//                     <td className={styles["actions-cell"]}>
+//                       <button
+//                         onClick={() => setSelectedQuotation(q)}
+//                         className={`${styles["action-button"]} ${styles["view-button"]}`}
+//                         title="View details"
+//                       >
+//                         <Eye size={16} />
+//                         <span>View</span>
+//                       </button>
+//                     </td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </table>
+//           </div>
+
+//           {/* Mobile Cards */}
+//           <div className={styles["mobile-cards-container"]}>
+//             {filteredQuotations.map((q) => (
+//               <div key={q.quotationId} className={styles["invoice-card"]}>
+//                 <div className={styles["card-header-mobile"]}>
+//                   <div className={styles["card-title-section"]}>
+//                     <h3 className={styles["card-invoice-number"]}>{q.referenceNo}</h3>
+//                     <span
+//                       className={`${styles["status-badge"]} ${
+//                         q.quotationType === "OPEN" ? styles["status-open"] : styles["status-closed"]
+//                       }`}
+//                     >
+//                       {q.quotationType}
+//                     </span>
+//                   </div>
+//                   <button onClick={() => setSelectedQuotation(q)} className={styles["card-action-button"]}>
+//                     <ChevronDown size={20} />
+//                   </button>
+//                 </div>
+
+//                 <div className={styles["card-body"]}>
+//                   <div className={styles["card-info-row"]}>
+//                     <span className={styles["info-label"]}>Party:</span>
+//                     <span className={styles["info-value"]}>{q.partyResponseDto?.name || "—"}</span>
+//                   </div>
+//                   <div className={styles["card-info-row"]}>
+//                     <span className={styles["info-label"]}>Date:</span>
+//                     <span className={styles["info-value"]}>
+//                       {new Date(q.invoiceDate).toLocaleDateString()}
+//                     </span>
+//                   </div>
+//                   <div className={styles["card-info-row"]}>
+//                     <span className={styles["info-label"]}>Total:</span>
+//                     <span className={styles["info-value-amount"]}>
+//                       ₹{Number.parseFloat(q.totalAmount || 0).toFixed(2)}
+//                     </span>
+//                   </div>
+//                   <div className={styles["card-info-row"]}>
+//                     <span className={styles["info-label"]}>Tax:</span>
+//                     <span className={styles["info-value"]}>
+//                       ₹{Number.parseFloat(q.totalTaxAmount || 0).toFixed(2)}
+//                     </span>
+//                   </div>
+//                 </div>
+
+//                 <div className={styles["card-footer"]}>
+//                   <button onClick={() => setSelectedQuotation(q)} className={styles["card-view-button"]}>
+//                     <Eye size={16} />
+//                     View Details
+//                   </button>
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+//         </>
+//       ) : (
+//         !loading && (
+//           <div className={styles["no-data"]}>
+//             <Package size={48} />
+//             <p>No quotations found</p>
+//             <p className={styles["no-data-subtitle"]}>
+//               {searchTerm
+//                 ? "Try adjusting your search"
+//                 : 'Click "New Quotation" to create your first quotation.'}
+//             </p>
+//           </div>
+//         )
+//       )}
+
+//       {/* VIEW MODAL */}
+//       {selectedQuotation && (
+//         <div className={styles["modal-overlay"]} onClick={() => setSelectedQuotation(null)}>
+//           <div className={styles["detail-card"]} onClick={(e) => e.stopPropagation()}>
+//             <div className={styles["card-header"]}>
+//               <div className={styles["header-title-section"]}>
+//                 <h3>Quotation #{selectedQuotation.referenceNo}</h3>
+//                 <div
+//                   className={`${styles["balance-badge"]} ${
+//                     selectedQuotation.quotationType === "CLOSE" ? styles.paid : ""
+//                   }`}
+//                 >
+//                   {selectedQuotation.quotationType === "OPEN" ? (
+//                     <>
+//                       <AlertCircle size={16} />
+//                       Open
+//                     </>
+//                   ) : (
+//                     <>
+//                       <CheckCircle size={16} />
+//                       Closed
+//                     </>
+//                   )}
+//                 </div>
+//               </div>
+//               <div className={styles["header-actions"]}>
+//                 {selectedQuotation.quotationType !== "CLOSE" && (
+//                   <>
+//                     <button
+//                       onClick={() => handleEdit(selectedQuotation.quotationId)}
+//                       className={`${styles["action-button"]} ${styles["edit-button"]}`}
+//                       title="Edit"
+//                     >
+//                       <Edit2 size={16} />
+//                       <span>Edit</span>
+//                     </button>
+
+//                     <button
+//                       onClick={() => handleConvert(selectedQuotation.quotationId)}
+//                       className={`${styles["action-button"]} ${styles["convert-button"]}`}
+//                       title="Convert to Sale"
+//                       disabled={converting}
+//                     >
+//                       {converting ? (
+//                         <Loader size={16} className={styles.spinner} />
+//                       ) : (
+//                         <Package size={16} />
+//                       )}
+//                       <span>{converting ? "Converting…" : "Convert to Sale"}</span>
+//                     </button>
+//                   </>
+//                 )}
+
+//                 <button
+//                   onClick={() => deleteQuotation(selectedQuotation.quotationId)}
+//                   className={`${styles["action-button"]} ${styles["delete-button"]}`}
+//                   title="Delete"
+//                 >
+//                   <Trash2 size={16} />
+//                   <span>Delete</span>
+//                 </button>
+
+//                 <button
+//                   className={styles["close-modal-btn"]}
+//                   onClick={() => setSelectedQuotation(null)}
+//                   title="Close"
+//                 >
+//                   <X size={20} />
+//                 </button>
+//               </div>
+//             </div>
+
+//             {/* Quotation Summary */}
+//             <section className={styles["card-section"]}>
+//               <h4 className={styles["section-title"]}>Quotation Summary</h4>
+//               <div className={styles["detail-grid"]}>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Reference No:</span>
+//                   <span className={styles["detail-value"]}>{selectedQuotation.referenceNo}</span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Date:</span>
+//                   <span className={styles["detail-value"]}>
+//                     {new Date(selectedQuotation.invoiceDate).toLocaleDateString()}
+//                   </span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>State of Supply:</span>
+//                   <span className={styles["detail-value"]}>
+//                     {selectedQuotation.stateOfSupply?.replace(/_/g, " ")}
+//                   </span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Description:</span>
+//                   <span className={styles["detail-value"]}>{selectedQuotation.description || "—"}</span>
+//                 </div>
+//               </div>
+
+//               <div className={styles["amount-breakdown"]}>
+//                 <div className={styles["breakdown-row"]}>
+//                   <span>Total (w/o Tax):</span>
+//                   <span>₹{Number.parseFloat(selectedQuotation.totalAmountWithoutTax || 0).toFixed(2)}</span>
+//                 </div>
+//                 <div className={styles["breakdown-row"]}>
+//                   <span>Tax Amount:</span>
+//                   <span>₹{Number.parseFloat(selectedQuotation.totalTaxAmount || 0).toFixed(2)}</span>
+//                 </div>
+//                 <div className={styles["breakdown-row"]}>
+//                   <span>Delivery Charges:</span>
+//                   <span>₹{Number.parseFloat(selectedQuotation.deliveryCharges || 0).toFixed(2)}</span>
+//                 </div>
+//                 <div className={styles["breakdown-row"]}>
+//                   <span>Total Amount:</span>
+//                   <span className={styles["total-amount"]}>
+//                     ₹{Number.parseFloat(selectedQuotation.totalAmount || 0).toFixed(2)}
+//                   </span>
+//                 </div>
+//               </div>
+//             </section>
+
+//             {/* Party Details */}
+//             {selectedQuotation.partyResponseDto && (
+//               <section className={styles["card-section"]}>
+//                 <h4 className={styles["section-title"]}>Party Details</h4>
+//                 <div className={styles["detail-grid"]}>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>Name:</span>
+//                     <span className={styles["detail-value"]}>{selectedQuotation.partyResponseDto.name}</span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>GSTIN:</span>
+//                     <span className={styles["detail-value"]}>{selectedQuotation.partyResponseDto.gstin || "—"}</span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>Phone:</span>
+//                     <span className={styles["detail-value"]}>{selectedQuotation.partyResponseDto.phoneNo || "—"}</span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>Email:</span>
+//                     <span className={styles["detail-value"]}>{selectedQuotation.partyResponseDto.emailId || "—"}</span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>State:</span>
+//                     <span className={styles["detail-value"]}>
+//                       {selectedQuotation.partyResponseDto.state?.replace(/_/g, " ")}
+//                     </span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>Billing Address:</span>
+//                     <span className={styles["detail-value"]}>
+//                       {selectedQuotation.partyResponseDto.billingAddress || "—"}
+//                     </span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>Shipping Address:</span>
+//                     <span className={styles["detail-value"]}>
+//                       {selectedQuotation.partyResponseDto.shipingAddress || "—"}
+//                     </span>
+//                   </div>
+//                 </div>
+//               </section>
+//             )}
+
+//             {/* Items */}
+//             <section className={styles["card-section"]}>
+//               <h4 className={styles["section-title"]}>Items</h4>
+//               {selectedQuotation.quotationItemResponses?.length > 0 ? (
+//                 <div className={styles["items-table-wrapper"]}>
+//                   <table className={styles["items-table"]}>
+//                     <thead>
+//                       <tr>
+//                         <th>Name</th>
+//                         <th>HSN</th>
+//                         <th>Qty</th>
+//                         <th>Unit</th>
+//                         <th>Rate</th>
+//                         <th>Tax Type</th>
+//                         <th>Tax Rate</th>
+//                         <th>Tax</th>
+//                         <th>Total</th>
+//                       </tr>
+//                     </thead>
+//                     <tbody>
+//                       {selectedQuotation.quotationItemResponses.map((it, i) => (
+//                         <tr key={i}>
+//                           <td>{it.itemName}</td>
+//                           <td>{it.itemHsnCode || "—"}</td>
+//                           <td>{it.quantity}</td>
+//                           <td>{it.unit}</td>
+//                           <td>₹{Number.parseFloat(it.pricePerUnit || 0).toFixed(2)}</td>
+//                           <td>{it.pricePerUnitTaxType}</td>
+//                           <td>{it.taxRate}</td>
+//                           <td>₹{Number.parseFloat(it.totalTaxAmount || 0).toFixed(2)}</td>
+//                           <td>₹{Number.parseFloat(it.totalAmount || 0).toFixed(2)}</td>
+//                         </tr>
+//                       ))}
+//                     </tbody>
+//                   </table>
+//                 </div>
+//               ) : (
+//                 <p>No items</p>
+//               )}
+//             </section>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default QuotationList;
+
+
+
+
+
+
+
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../utils/axiosInstance"; // Shared API with interceptors
+import api from "../../../utils/axiosInstance";
 import { toast } from "react-toastify";
 import styles from "../Styles/ScreenUI.module.css";
 import {
@@ -1382,39 +1961,63 @@ import {
   Loader,
 } from "lucide-react";
 
-// Helper: Map Quotation to Sale Payload
+// Helper: Convert Quotation → Sale Invoice Payload
 const mapQuotationToSalePayload = (quotation) => {
-  const items = quotation.quotationItemResponses?.map((it) => ({
-    itemName: it.itemName,
-    itemHsnCode: it.itemHsnCode || "",
-    itemDescription: it.itemDescription || "",
-    quantity: it.quantity,
-    unit: it.unit,
-    pricePerUnit: it.pricePerUnit,
-    pricePerUnitTaxType: it.pricePerUnitTaxType,
-    taxRate: it.taxRate,
-    taxAmount: it.totalTaxAmount,
-    totalAmount: it.totalAmount,
-  })) ?? [];
+  // IMPORTANT: Map items with real itemId (backend usually requires it)
+  const saleItems = (quotation.quotationItemResponses || []).map((item) => {
+    // Try different possible field names your backend might use
+    const itemId = item.itemId || item.id || item.productId || item.stockItemId || null;
+
+    return {
+      itemId: itemId ? Number(itemId) : null,           // ← This is usually required!
+      itemName: item.itemName || "",
+      itemHsnCode: item.itemHsnCode || "",
+      itemDescription: item.itemDescription || "",
+      quantity: Number(item.quantity) || 1,
+      unit: item.unit || "PCS",
+      pricePerUnit: Number(item.pricePerUnit || 0),
+      pricePerUnitTaxType: item.pricePerUnitTaxType || "WITHTAX",
+      taxRate: item.taxRate || "NONE",
+      taxAmount: Number(item.totalTaxAmount || item.taxAmount || 0),
+      totalAmount: Number(item.totalAmount || 0),
+    };
+  });
 
   return {
-    partyId: quotation.partyResponseDto?.partyId,
+    partyId: quotation.partyResponseDto?.partyId 
+      ? Number(quotation.partyResponseDto.partyId) 
+      : null,
+
     billingAddress: quotation.partyResponseDto?.billingAddress || "",
-    shippingAddress: quotation.partyResponseDto?.shipingAddress || "",
-    invoiceNumber: `${quotation.referenceNo}-INV`,
-    invoiceDate: quotation.invoiceDate,
-    dueDate: quotation.invoiceDate,
+    shippingAddress: quotation.partyResponseDto?.shipingAddress 
+      || quotation.partyResponseDto?.shippingAddress 
+      || "",
+
+    invoiceNumber: `${quotation.referenceNo || "QUOT"}-INV`,
+
+    // Proper date format expected by most APIs (YYYY-MM-DD)
+    invoceDate: quotation.invoiceDate 
+      ? new Date(quotation.invoiceDate).toISOString().split("T")[0] 
+      : new Date().toISOString().split("T")[0],
+    
+    dueDate: quotation.dueDate || quotation.invoiceDate 
+      ? new Date(quotation.dueDate || quotation.invoiceDate).toISOString().split("T")[0] 
+      : new Date().toISOString().split("T")[0],
+
     saleType: "CASH",
-    stateOfSupply: quotation.stateOfSupply,
+    stateOfSupply: quotation.stateOfSupply || "MAHARASHTRA",
     paymentType: "CASH",
     paymentDescription: quotation.description || "",
-    totalAmountWithoutTax: quotation.totalAmountWithoutTax,
-    totalTaxAmount: quotation.totalTaxAmount,
-    deliveryCharges: quotation.deliveryCharges || 0,
-    totalAmount: quotation.totalAmount,
-    receivedAmount: 0,
-    balance: quotation.totalAmount,
-    saleItems: items,
+
+    totalAmountWithoutTax: Number(quotation.totalAmountWithoutTax || 0),
+    totalTaxAmount: Number(quotation.totalTaxAmount || 0),
+    deliveryCharges: Number(quotation.deliveryCharges || 0),
+    totalAmount: Number(quotation.totalAmount || 0),
+    receivedAmount: 0,                 // New sale → no payment received yet
+    balance: Number(quotation.totalAmount || 0),
+
+    saleItems,
+
     paid: false,
     overdue: false,
   };
@@ -1436,18 +2039,14 @@ const QuotationList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [converting, setConverting] = useState(false);
 
-  // Sync userData
   useEffect(() => {
     const handleStorageChange = () => {
-      const updated = JSON.parse(localStorage.getItem("eBilling") || "{}");
-      setUserData(updated);
+      setUserData(JSON.parse(localStorage.getItem("eBilling") || "{}"));
     };
-
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  // Fetch quotations + auth check
   useEffect(() => {
     if (!token) {
       toast.info("Please log in to continue.");
@@ -1476,14 +2075,12 @@ const QuotationList = () => {
   }, [token, companyId, navigate]);
 
   const deleteQuotation = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this quotation? This action cannot be undone.")) {
-      return;
-    }
+    if (!window.confirm("Are you sure you want to delete this quotation?")) return;
 
     try {
       setLoading(true);
       await api.delete(`/quotation/${id}`);
-      setQuotations((prev) => prev.filter((q) => q.quotationId !== id));
+      setQuotations(prev => prev.filter(q => q.quotationId !== id));
       setSelectedQuotation(null);
       toast.success("Quotation deleted successfully");
     } catch (err) {
@@ -1511,7 +2108,25 @@ const QuotationList = () => {
       const res = await api.get(`/quotation/${quotationId}`);
       const quotation = res.data;
 
+      // Debug logs — very important for finding the real problem
+      console.log("[QUOTATION → SALE DEBUG] Full quotation data:", quotation);
+      console.log("[QUOTATION → SALE DEBUG] Party ID:", quotation.partyResponseDto?.partyId);
+
       const payload = mapQuotationToSalePayload(quotation);
+
+      console.log("[QUOTATION → SALE DEBUG] Generated payload:", payload);
+      console.log("[QUOTATION → SALE DEBUG] Sale Items:", payload.saleItems);
+
+      // Safety checks before sending
+      if (!payload.partyId) {
+        throw new Error("Cannot convert: Party ID is missing");
+      }
+
+      const missingItemIds = payload.saleItems.filter(item => !item.itemId);
+      if (missingItemIds.length > 0) {
+        console.warn("[WARNING] Items missing itemId:", missingItemIds);
+        toast.warn(`${missingItemIds.length} item(s) missing product ID – conversion may fail`);
+      }
 
       await api.post(`/quotation/${quotationId}/convert-to-sale`, payload);
 
@@ -1522,17 +2137,21 @@ const QuotationList = () => {
       setQuotations(refreshed.data || []);
       setSelectedQuotation(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to convert to sale");
+      console.error("[ERROR] Quotation conversion failed:", err);
+      const errorMsg = err.response?.data?.message 
+        || err.message 
+        || "Failed to convert quotation to sale";
+      toast.error(errorMsg);
     } finally {
       setConverting(false);
     }
   };
 
   const filteredQuotations = quotations.filter((q) => {
-    const matchesSearch =
+    return (
       q.referenceNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      q.partyResponseDto?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+      q.partyResponseDto?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   });
 
   return (
@@ -1611,20 +2230,18 @@ const QuotationList = () => {
                     <td>{q.quotationItemResponses?.length || 0}</td>
                     <td className={styles["amount-cell"]}>
                       <span className={styles["amount"]}>
-                        ₹{Number.parseFloat(q.totalAmountWithoutTax || 0).toFixed(2)}
+                        ₹{Number(q.totalAmountWithoutTax || 0).toFixed(2)}
                       </span>
                     </td>
                     <td className={styles["received-cell"]}>
-                      ₹{Number.parseFloat(q.totalTaxAmount || 0).toFixed(2)}
+                      ₹{Number(q.totalTaxAmount || 0).toFixed(2)}
                     </td>
                     <td className={styles["balance-cell"]}>
-                      <span className={styles["amount"]}>
-                        ₹{Number.parseFloat(q.deliveryCharges || 0).toFixed(2)}
-                      </span>
+                      ₹{Number(q.deliveryCharges || 0).toFixed(2)}
                     </td>
                     <td className={styles["amount-cell"]}>
                       <span className={styles["total-amount"]}>
-                        ₹{Number.parseFloat(q.totalAmount || 0).toFixed(2)}
+                        ₹{Number(q.totalAmount || 0).toFixed(2)}
                       </span>
                     </td>
                     <td>
@@ -1652,7 +2269,7 @@ const QuotationList = () => {
             </table>
           </div>
 
-          {/* Mobile Cards */}
+          {/* Mobile Cards (keeping your original structure) */}
           <div className={styles["mobile-cards-container"]}>
             {filteredQuotations.map((q) => (
               <div key={q.quotationId} className={styles["invoice-card"]}>
@@ -1686,13 +2303,13 @@ const QuotationList = () => {
                   <div className={styles["card-info-row"]}>
                     <span className={styles["info-label"]}>Total:</span>
                     <span className={styles["info-value-amount"]}>
-                      ₹{Number.parseFloat(q.totalAmount || 0).toFixed(2)}
+                      ₹{Number(q.totalAmount || 0).toFixed(2)}
                     </span>
                   </div>
                   <div className={styles["card-info-row"]}>
                     <span className={styles["info-label"]}>Tax:</span>
                     <span className={styles["info-value"]}>
-                      ₹{Number.parseFloat(q.totalTaxAmount || 0).toFixed(2)}
+                      ₹{Number(q.totalTaxAmount || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -1822,20 +2439,20 @@ const QuotationList = () => {
               <div className={styles["amount-breakdown"]}>
                 <div className={styles["breakdown-row"]}>
                   <span>Total (w/o Tax):</span>
-                  <span>₹{Number.parseFloat(selectedQuotation.totalAmountWithoutTax || 0).toFixed(2)}</span>
+                  <span>₹{Number(selectedQuotation.totalAmountWithoutTax || 0).toFixed(2)}</span>
                 </div>
                 <div className={styles["breakdown-row"]}>
                   <span>Tax Amount:</span>
-                  <span>₹{Number.parseFloat(selectedQuotation.totalTaxAmount || 0).toFixed(2)}</span>
+                  <span>₹{Number(selectedQuotation.totalTaxAmount || 0).toFixed(2)}</span>
                 </div>
                 <div className={styles["breakdown-row"]}>
                   <span>Delivery Charges:</span>
-                  <span>₹{Number.parseFloat(selectedQuotation.deliveryCharges || 0).toFixed(2)}</span>
+                  <span>₹{Number(selectedQuotation.deliveryCharges || 0).toFixed(2)}</span>
                 </div>
                 <div className={styles["breakdown-row"]}>
                   <span>Total Amount:</span>
                   <span className={styles["total-amount"]}>
-                    ₹{Number.parseFloat(selectedQuotation.totalAmount || 0).toFixed(2)}
+                    ₹{Number(selectedQuotation.totalAmount || 0).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -1910,11 +2527,11 @@ const QuotationList = () => {
                           <td>{it.itemHsnCode || "—"}</td>
                           <td>{it.quantity}</td>
                           <td>{it.unit}</td>
-                          <td>₹{Number.parseFloat(it.pricePerUnit || 0).toFixed(2)}</td>
+                          <td>₹{Number(it.pricePerUnit || 0).toFixed(2)}</td>
                           <td>{it.pricePerUnitTaxType}</td>
                           <td>{it.taxRate}</td>
-                          <td>₹{Number.parseFloat(it.totalTaxAmount || 0).toFixed(2)}</td>
-                          <td>₹{Number.parseFloat(it.totalAmount || 0).toFixed(2)}</td>
+                          <td>₹{Number(it.totalTaxAmount || 0).toFixed(2)}</td>
+                          <td>₹{Number(it.totalAmount || 0).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>

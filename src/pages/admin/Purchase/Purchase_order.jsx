@@ -1475,11 +1475,634 @@
 
 
 
+// "use client";
+
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import api from "../../../utils/axiosInstance"; // Shared API with interceptors
+// import { toast } from "react-toastify";
+// import styles from "../Styles/ScreenUI.module.css";
+// import {
+//   Plus,
+//   Eye,
+//   Edit2,
+//   Trash2,
+//   X,
+//   Package,
+//   AlertCircle,
+//   CheckCircle,
+//   ChevronDown,
+//   Search,
+//   Loader,
+// } from "lucide-react";
+
+// // Helper: Map PO to Purchase Conversion Payload
+// const mapPoToPurchasePayload = (po) => {
+//   const items = po.purchaseOrderItemResponseList?.map((it) => ({
+//     itemName: it.itemName,
+//     itemHsnCode: "", // Add HSN if available
+//     itemDescription: "",
+//     quantity: it.quantity,
+//     unit: it.unit,
+//     pricePerUnit: it.perUnitRate,
+//     pricePerUnitTaxType: it.taxType,
+//     taxRate: it.taxRate,
+//     totalTaxAmount: it.totalTaxAmount,
+//     totalAmount: it.totalAmount,
+//   })) ?? [];
+
+//   return {
+//     partyId: po.partyResponseDto?.partyId,
+//     billNumber: `${po.orderNo}-BILL`,
+//     billDate: po.purchaseDate,
+//     dueDate: po.dueDate,
+//     stateOfSupply: po.stateOfSupply,
+//     paymentType: po.paymentType,
+//     paymentDescription: po.description || "",
+//     totalTaxAmount: po.totalTaxAmount,
+//     totalAmountWithoutTax: po.totalAmount - po.totalTaxAmount,
+//     deliveryCharges: 0,
+//     totalAmount: po.totalAmount,
+//     sendAmount: po.advanceAmount,
+//     balance: po.balanceAmount,
+//     purchaseItemRequests: items,
+//     isPaid: po.balanceAmount <= 0,
+//     isOverdue: new Date(po.dueDate) < new Date(),
+//   };
+// };
+
+// const PurchaseOrderList = () => {
+//   const navigate = useNavigate();
+
+//   const [userData, setUserData] = useState(
+//     JSON.parse(localStorage.getItem("eBilling") || "{}")
+//   );
+
+//   const token = userData?.accessToken;
+//   const companyId = userData?.selectedCompany?.id;
+
+//   const [orders, setOrders] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [selectedOrder, setSelectedOrder] = useState(null);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [converting, setConverting] = useState(false);
+
+//   // Sync userData
+//   useEffect(() => {
+//     const handleStorageChange = () => {
+//       const updated = JSON.parse(localStorage.getItem("eBilling") || "{}");
+//       setUserData(updated);
+//     };
+
+//     window.addEventListener("storage", handleStorageChange);
+//     return () => window.removeEventListener("storage", handleStorageChange);
+//   }, []);
+
+//   // Fetch purchase orders + auth check
+//   useEffect(() => {
+//     if (!token) {
+//       toast.info("Please log in to continue.");
+//       navigate("/login");
+//       return;
+//     }
+//     if (!companyId) {
+//       toast.info("Please select a company first.");
+//       navigate("/company-list");
+//       return;
+//     }
+
+//     const fetchPurchaseOrders = async () => {
+//       setLoading(true);
+//       try {
+//         const res = await api.get(`/company/${companyId}/purchase-order/list/according`);
+//         setOrders(res.data || []);
+//       } catch (err) {
+//         toast.error(err.response?.data?.message || "Failed to load purchase orders");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchPurchaseOrders();
+//   }, [token, companyId, navigate]);
+
+//   // Delete order
+//   const deleteOrder = async (orderId) => {
+//     if (!window.confirm("Are you sure you want to delete this purchase order? This action cannot be undone.")) {
+//       return;
+//     }
+
+//     try {
+//       setLoading(true);
+//       await api.delete(`/purchase-order/${orderId}`);
+//       setOrders((prev) => prev.filter((o) => o.purchaseOrderId !== orderId));
+//       setSelectedOrder(null);
+//       toast.success("Purchase order deleted successfully");
+//     } catch (err) {
+//       toast.error(err.response?.data?.message || "Failed to delete order");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Edit order
+//   const handleEdit = (orderId) => {
+//     navigate(`/create_purchase_order?edit=${orderId}`);
+//     setSelectedOrder(null);
+//   };
+
+//   // Convert to Purchase
+//   const handleConvert = async (orderId) => {
+//     if (converting) return;
+
+//     if (!window.confirm("Convert this purchase order to a purchase bill? This action cannot be undone.")) {
+//       return;
+//     }
+
+//     setConverting(true);
+
+//     try {
+//       // 1. Fetch full PO details
+//       const poRes = await api.get(`/purchase-order/${orderId}`);
+//       const po = poRes.data;
+
+//       // 2. Map to purchase payload
+//       const payload = mapPoToPurchasePayload(po);
+
+//       // 3. Convert
+//       await api.post(`/purchase-order/${orderId}/convert/to/purchase`, payload);
+
+//       toast.success("Purchase order converted to Purchase successfully!");
+
+//       // Refresh list
+//       const res = await api.get(`/company/${companyId}/purchase-order/list/according`);
+//       setOrders(res.data || []);
+//       setSelectedOrder(null);
+//     } catch (err) {
+//       toast.error(err.response?.data?.message || "Failed to convert to purchase");
+//     } finally {
+//       setConverting(false);
+//     }
+//   };
+
+//   // Filter orders
+//   const filteredOrders = orders.filter((o) => {
+//     const matchesSearch =
+//       o.orderNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       o.partyResponseDto?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+//     return matchesSearch;
+//   });
+
+//   return (
+//     <div className={styles["company-form-container"]}>
+//       {/* HEADER */}
+//       <div className={styles["form-header"]}>
+//         <div className={styles["header-content"]}>
+//           <div className={styles["header-icon"]}>
+//             <Package size={32} style={{ color: "var(--primary-color)" }} />
+//           </div>
+//           <div className={styles["header-text"]}>
+//             <h1 className={styles["company-form-title"]}>Purchase Orders</h1>
+//             <p className={styles["form-subtitle"]}>Manage all your purchase orders</p>
+//           </div>
+//         </div>
+//         <button
+//           onClick={() => navigate("/create_purchase_order")}
+//           className={styles["submit-button"]}
+//           disabled={loading}
+//         >
+//           <Plus size={18} />
+//           <span>New Order</span>
+//         </button>
+//       </div>
+
+//       {/* SEARCH BAR */}
+//       <div className={styles["search-container"]}>
+//         <Search size={18} className={styles["search-icon"]} />
+//         <input
+//           type="text"
+//           placeholder="Search by order # or party name..."
+//           value={searchTerm}
+//           onChange={(e) => setSearchTerm(e.target.value)}
+//           className={styles["search-input"]}
+//         />
+//       </div>
+
+//       {/* LOADING */}
+//       {loading && !converting && (
+//         <div className={styles["loading-message"]}>
+//           <Loader size={32} className={styles["spinner"]} />
+//           <p>Loading orders...</p>
+//         </div>
+//       )}
+
+//       {/* TABLE / CARDS */}
+//       {filteredOrders.length > 0 ? (
+//         <>
+//           {/* Desktop Table */}
+//           <div className={styles["table-wrapper"]}>
+//             <table className={styles.table}>
+//               <thead>
+//                 <tr>
+//                   <th>Order #</th>
+//                   <th>Purchase Date</th>
+//                   <th>Due Date</th>
+//                   <th>Party</th>
+//                   <th>Total Qty</th>
+//                   <th>Total</th>
+//                   <th>Advance</th>
+//                   <th>Balance</th>
+//                   <th>Status</th>
+//                   <th>Action</th>
+//                 </tr>
+//               </thead>
+//               <tbody>
+//                 {filteredOrders.map((order) => (
+//                   <tr key={order.purchaseOrderId} className={styles["table-row"]}>
+//                     <td className={styles["invoice-cell"]}>
+//                       <span className={styles["invoice-badge"]}>{order.orderNo}</span>
+//                     </td>
+//                     <td>{new Date(order.purchaseDate).toLocaleDateString()}</td>
+//                     <td>{new Date(order.dueDate).toLocaleDateString()}</td>
+//                     <td>
+//                       <span className={styles["party-name"]}>{order.partyResponseDto?.name || "—"}</span>
+//                     </td>
+//                     <td>{order.totalQuantity}</td>
+//                     <td className={styles["amount-cell"]}>
+//                       <span className={styles["amount"]}>
+//                         ₹{Number.parseFloat(order.totalAmount || 0).toFixed(2)}
+//                       </span>
+//                     </td>
+//                     <td className={styles["received-cell"]}>
+//                       ₹{Number.parseFloat(order.advanceAmount || 0).toFixed(2)}
+//                     </td>
+//                     <td className={styles["balance-cell"]}>
+//                       <span
+//                         className={
+//                           order.balanceAmount > 0 ? styles["balance-pending"] : styles["balance-paid"]
+//                         }
+//                       >
+//                         ₹{Number.parseFloat(order.balanceAmount || 0).toFixed(2)}
+//                       </span>
+//                     </td>
+//                     <td>
+//                       <span
+//                         className={`${styles["status-badge"]} ${
+//                           order.orderType === "OPEN" ? styles["status-open"] : styles["status-closed"]
+//                         }`}
+//                       >
+//                         {order.orderType}
+//                       </span>
+//                     </td>
+//                     <td className={styles["actions-cell"]}>
+//                       <button
+//                         onClick={() => setSelectedOrder(order)}
+//                         className={`${styles["action-button"]} ${styles["view-button"]}`}
+//                         title="View details"
+//                       >
+//                         <Eye size={16} />
+//                         <span>View</span>
+//                       </button>
+//                     </td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </table>
+//           </div>
+
+//           {/* Mobile Cards */}
+//           <div className={styles["mobile-cards-container"]}>
+//             {filteredOrders.map((order) => (
+//               <div key={order.purchaseOrderId} className={styles["invoice-card"]}>
+//                 <div className={styles["card-header-mobile"]}>
+//                   <div className={styles["card-title-section"]}>
+//                     <h3 className={styles["card-invoice-number"]}>{order.orderNo}</h3>
+//                     <span
+//                       className={`${styles["status-badge"]} ${
+//                         order.orderType === "OPEN" ? styles["status-open"] : styles["status-closed"]
+//                       }`}
+//                     >
+//                       {order.orderType}
+//                     </span>
+//                   </div>
+//                   <button onClick={() => setSelectedOrder(order)} className={styles["card-action-button"]}>
+//                     <ChevronDown size={20} />
+//                   </button>
+//                 </div>
+
+//                 <div className={styles["card-body"]}>
+//                   <div className={styles["card-info-row"]}>
+//                     <span className={styles["info-label"]}>Party:</span>
+//                     <span className={styles["info-value"]}>{order.partyResponseDto?.name || "—"}</span>
+//                   </div>
+//                   <div className={styles["card-info-row"]}>
+//                     <span className={styles["info-label"]}>Date:</span>
+//                     <span className={styles["info-value"]}>
+//                       {new Date(order.purchaseDate).toLocaleDateString()}
+//                     </span>
+//                   </div>
+//                   <div className={styles["card-info-row"]}>
+//                     <span className={styles["info-label"]}>Total:</span>
+//                     <span className={styles["info-value-amount"]}>
+//                       ₹{Number.parseFloat(order.totalAmount || 0).toFixed(2)}
+//                     </span>
+//                   </div>
+//                   <div className={styles["card-info-row"]}>
+//                     <span className={styles["info-label"]}>Balance:</span>
+//                     <span
+//                       className={
+//                         order.balanceAmount > 0 ? styles["info-value-pending"] : styles["info-value-paid"]
+//                       }
+//                     >
+//                       ₹{Number.parseFloat(order.balanceAmount || 0).toFixed(2)}
+//                     </span>
+//                   </div>
+//                 </div>
+
+//                 <div className={styles["card-footer"]}>
+//                   <button onClick={() => setSelectedOrder(order)} className={styles["card-view-button"]}>
+//                     <Eye size={16} />
+//                     View Details
+//                   </button>
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+//         </>
+//       ) : (
+//         !loading && (
+//           <div className={styles["no-data"]}>
+//             <Package size={48} />
+//             <p>No purchase orders found</p>
+//             <p className={styles["no-data-subtitle"]}>
+//               {searchTerm
+//                 ? "Try adjusting your search"
+//                 : 'Click "New Order" to create your first purchase order.'}
+//             </p>
+//           </div>
+//         )
+//       )}
+
+//       {/* VIEW MODAL */}
+//       {selectedOrder && (
+//         <div className={styles["modal-overlay"]} onClick={() => setSelectedOrder(null)}>
+//           <div className={styles["detail-card"]} onClick={(e) => e.stopPropagation()}>
+//             <div className={styles["card-header"]}>
+//               <div className={styles["header-title-section"]}>
+//                 <h3>Purchase Order #{selectedOrder.orderNo}</h3>
+//                 <div className={`${styles["balance-badge"]} ${selectedOrder.balanceAmount <= 0 ? styles.paid : ""}`}>
+//                   {selectedOrder.balanceAmount > 0 ? (
+//                     <>
+//                       <AlertCircle size={16} />
+//                       Balance: ₹{Number.parseFloat(selectedOrder.balanceAmount || 0).toFixed(2)}
+//                     </>
+//                   ) : (
+//                     <>
+//                       <CheckCircle size={16} />
+//                       Paid
+//                     </>
+//                   )}
+//                 </div>
+//               </div>
+//               <div className={styles["header-actions"]}>
+//                 {/* EDIT & CONVERT: Only if not CLOSED */}
+//                 {selectedOrder.orderType !== "CLOSE" && (
+//                   <>
+//                     <button
+//                       onClick={() => handleEdit(selectedOrder.purchaseOrderId)}
+//                       className={`${styles["action-button"]} ${styles["edit-button"]}`}
+//                       title="Edit order"
+//                     >
+//                       <Edit2 size={16} />
+//                       <span>Edit</span>
+//                     </button>
+
+//                     <button
+//                       onClick={() => handleConvert(selectedOrder.purchaseOrderId)}
+//                       className={`${styles["action-button"]} ${styles["convert-button"]}`}
+//                       title="Convert to Purchase"
+//                       disabled={converting}
+//                     >
+//                       {converting ? (
+//                         <Loader size={16} className={styles.spinner} />
+//                       ) : (
+//                         <Package size={16} />
+//                       )}
+//                       <span>{converting ? "Converting…" : "Convert to Purchase"}</span>
+//                     </button>
+//                   </>
+//                 )}
+
+//                 <button
+//                   onClick={() => deleteOrder(selectedOrder.purchaseOrderId)}
+//                   className={`${styles["action-button"]} ${styles["delete-button"]}`}
+//                   title="Delete order"
+//                 >
+//                   <Trash2 size={16} />
+//                   <span>Delete</span>
+//                 </button>
+//                 <button
+//                   className={styles["close-modal-btn"]}
+//                   onClick={() => setSelectedOrder(null)}
+//                   title="Close"
+//                 >
+//                   <X size={20} />
+//                 </button>
+//               </div>
+//             </div>
+
+//             {/* Order Summary */}
+//             <section className={styles["card-section"]}>
+//               <h4 className={styles["section-title"]}>Order Summary</h4>
+//               <div className={styles["detail-grid"]}>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Order ID:</span>
+//                   <span className={styles["detail-value"]}>{selectedOrder.purchaseOrderId}</span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Purchase Date:</span>
+//                   <span className={styles["detail-value"]}>
+//                     {new Date(selectedOrder.purchaseDate).toLocaleDateString()}
+//                   </span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Due Date:</span>
+//                   <span className={styles["detail-value"]}>
+//                     {new Date(selectedOrder.dueDate).toLocaleDateString()}
+//                   </span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Order Type:</span>
+//                   <span className={styles["detail-value"]}>{selectedOrder.orderType}</span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>State of Supply:</span>
+//                   <span className={styles["detail-value"]}>
+//                     {selectedOrder.stateOfSupply?.replace(/_/g, " ")}
+//                   </span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Payment Type:</span>
+//                   <span className={styles["detail-value"]}>{selectedOrder.paymentType}</span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Description:</span>
+//                   <span className={styles["detail-value"]}>{selectedOrder.description || "—"}</span>
+//                 </div>
+//                 <div className={styles["detail-item"]}>
+//                   <span className={styles["detail-label"]}>Total Quantity:</span>
+//                   <span className={styles["detail-value"]}>{selectedOrder.totalQuantity}</span>
+//                 </div>
+//               </div>
+
+//               <div className={styles["amount-breakdown"]}>
+//                 <div className={styles["breakdown-row"]}>
+//                   <span>Total (ex-tax):</span>
+//                   <span>₹{Number.parseFloat(selectedOrder.totalAmountWithoutTax || 0).toFixed(2)}</span>
+//                 </div>
+//                 <div className={styles["breakdown-row"]}>
+//                   <span>Tax Amount:</span>
+//                   <span>₹{Number.parseFloat(selectedOrder.totalTaxAmount || 0).toFixed(2)}</span>
+//                 </div>
+//                 <div className={styles["breakdown-row"]}>
+//                   <span>Total Discount:</span>
+//                   <span>₹{Number.parseFloat(selectedOrder.totalDiscount || 0).toFixed(2)}</span>
+//                 </div>
+//                 <div className={styles["breakdown-row"]}>
+//                   <span>Total Amount:</span>
+//                   <span className={styles["total-amount"]}>
+//                     ₹{Number.parseFloat(selectedOrder.totalAmount || 0).toFixed(2)}
+//                   </span>
+//                 </div>
+//                 <div className={styles["breakdown-row"]}>
+//                   <span>Advance Paid:</span>
+//                   <span>₹{Number.parseFloat(selectedOrder.advanceAmount || 0).toFixed(2)}</span>
+//                 </div>
+//                 <div
+//                   className={`${styles["breakdown-row"]} ${
+//                     selectedOrder.balanceAmount > 0 ? styles["balance-row-pending"] : styles["balance-row-paid"]
+//                   }`}
+//                 >
+//                   <span>Balance Due:</span>
+//                   <span className={styles["balance-amount"]}>
+//                     ₹{Number.parseFloat(selectedOrder.balanceAmount || 0).toFixed(2)}
+//                   </span>
+//                 </div>
+//               </div>
+//             </section>
+
+//             {/* Party Details */}
+//             {selectedOrder.partyResponseDto && (
+//               <section className={styles["card-section"]}>
+//                 <h4 className={styles["section-title"]}>Party Details</h4>
+//                 <div className={styles["detail-grid"]}>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>Name:</span>
+//                     <span className={styles["detail-value"]}>{selectedOrder.partyResponseDto.name}</span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>Party ID:</span>
+//                     <span className={styles["detail-value"]}>{selectedOrder.partyResponseDto.partyId}</span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>GSTIN:</span>
+//                     <span className={styles["detail-value"]}>{selectedOrder.partyResponseDto.gstin || "—"}</span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>GST Type:</span>
+//                     <span className={styles["detail-value"]}>
+//                       {selectedOrder.partyResponseDto.gstType?.replace(/_/g, " ")}
+//                     </span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>Phone:</span>
+//                     <span className={styles["detail-value"]}>{selectedOrder.partyResponseDto.phoneNo || "—"}</span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>Email:</span>
+//                     <span className={styles["detail-value"]}>{selectedOrder.partyResponseDto.emailId || "—"}</span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>State:</span>
+//                     <span className={styles["detail-value"]}>
+//                       {selectedOrder.partyResponseDto.state?.replace(/_/g, " ")}
+//                     </span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>Billing Address:</span>
+//                     <span className={styles["detail-value"]}>
+//                       {selectedOrder.partyResponseDto.billingAddress || "—"}
+//                     </span>
+//                   </div>
+//                   <div className={styles["detail-item"]}>
+//                     <span className={styles["detail-label"]}>Shipping Address:</span>
+//                     <span className={styles["detail-value"]}>
+//                       {selectedOrder.partyResponseDto.shipingAddress || "—"}
+//                     </span>
+//                   </div>
+//                 </div>
+//               </section>
+//             )}
+
+//             {/* Items */}
+//             <section className={styles["card-section"]}>
+//               <h4 className={styles["section-title"]}>Items</h4>
+//               {selectedOrder.purchaseOrderItemResponseList?.length > 0 ? (
+//                 <div className={styles["items-table-wrapper"]}>
+//                   <table className={styles["items-table"]}>
+//                     <thead>
+//                       <tr>
+//                         <th>Name</th>
+//                         <th>Qty</th>
+//                         <th>Unit</th>
+//                         <th>Rate</th>
+//                         <th>Tax Type</th>
+//                         <th>Tax Rate</th>
+//                         <th>Discount</th>
+//                         <th>Tax</th>
+//                         <th>Total</th>
+//                       </tr>
+//                     </thead>
+//                     <tbody>
+//                       {selectedOrder.purchaseOrderItemResponseList.map((it, i) => (
+//                         <tr key={i}>
+//                           <td>{it.itemName}</td>
+//                           <td>{it.quantity}</td>
+//                           <td>{it.unit}</td>
+//                           <td>₹{Number.parseFloat(it.perUnitRate || 0).toFixed(2)}</td>
+//                           <td>{it.taxType}</td>
+//                           <td>{it.taxRate}</td>
+//                           <td>₹{Number.parseFloat(it.discountAmount || 0).toFixed(2)}</td>
+//                           <td>₹{Number.parseFloat(it.totalTaxAmount || 0).toFixed(2)}</td>
+//                           <td>₹{Number.parseFloat(it.totalAmount || 0).toFixed(2)}</td>
+//                         </tr>
+//                       ))}
+//                     </tbody>
+//                   </table>
+//                 </div>
+//               ) : (
+//                 <p>No items</p>
+//               )}
+//             </section>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default PurchaseOrderList;
+
+
+
+
+
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../utils/axiosInstance"; // Shared API with interceptors
+import api from "../../../utils/axiosInstance";
 import { toast } from "react-toastify";
 import styles from "../Styles/ScreenUI.module.css";
 import {
@@ -1487,6 +2110,7 @@ import {
   Eye,
   Edit2,
   Trash2,
+  Printer,
   X,
   Package,
   AlertCircle,
@@ -1496,38 +2120,56 @@ import {
   Loader,
 } from "lucide-react";
 
-// Helper: Map PO to Purchase Conversion Payload
+// Helper: Convert Purchase Order → Purchase Bill Payload
 const mapPoToPurchasePayload = (po) => {
-  const items = po.purchaseOrderItemResponseList?.map((it) => ({
-    itemName: it.itemName,
-    itemHsnCode: "", // Add HSN if available
-    itemDescription: "",
-    quantity: it.quantity,
-    unit: it.unit,
-    pricePerUnit: it.perUnitRate,
-    pricePerUnitTaxType: it.taxType,
-    taxRate: it.taxRate,
-    totalTaxAmount: it.totalTaxAmount,
-    totalAmount: it.totalAmount,
-  })) ?? [];
+  // IMPORTANT: Map items with real itemId
+  const purchaseItems = (po.purchaseOrderItemResponseList || []).map((item) => {
+    // Adjust these field names based on your actual API response structure
+    const itemId = item.itemId || item.id || item.productId || item.stockItemId || null;
+
+    return {
+      itemId: itemId ? Number(itemId) : null,  // ← This is usually required!
+      itemName: item.itemName || "",
+      itemHsnCode: item.hsnCode || item.itemHsn || item.hsn || "",
+      itemDescription: item.description || "",
+      quantity: Number(item.quantity) || 1,
+      unit: item.unit || "PCS",
+      pricePerUnit: Number(item.perUnitRate || item.rate || item.price || 0),
+      pricePerUnitTaxType: item.taxType || "WITHTAX",
+      taxRate: item.taxRate || "NONE",
+      taxAmount: Number(item.totalTaxAmount || item.taxAmount || 0),
+      totalAmount: Number(item.totalAmount || 0),
+    };
+  });
 
   return {
-    partyId: po.partyResponseDto?.partyId,
-    billNumber: `${po.orderNo}-BILL`,
-    billDate: po.purchaseDate,
-    dueDate: po.dueDate,
-    stateOfSupply: po.stateOfSupply,
-    paymentType: po.paymentType,
+    partyId: po.partyResponseDto?.partyId
+      ? Number(po.partyResponseDto.partyId)
+      : null,
+
+    billNumber: `${po.orderNo || "PO"}-BILL`,
+    billDate: po.purchaseDate
+      ? new Date(po.purchaseDate).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0],
+    dueDate: po.dueDate
+      ? new Date(po.dueDate).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0],
+
+    stateOfSupply: po.stateOfSupply || "MAHARASHTRA",
+    paymentType: po.paymentType || "CASH",
     paymentDescription: po.description || "",
-    totalTaxAmount: po.totalTaxAmount,
-    totalAmountWithoutTax: po.totalAmount - po.totalTaxAmount,
+
+    totalAmountWithoutTax: Number((po.totalAmount || 0) - (po.totalTaxAmount || 0)),
+    totalTaxAmount: Number(po.totalTaxAmount || 0),
     deliveryCharges: 0,
-    totalAmount: po.totalAmount,
-    sendAmount: po.advanceAmount,
-    balance: po.balanceAmount,
-    purchaseItemRequests: items,
-    isPaid: po.balanceAmount <= 0,
-    isOverdue: new Date(po.dueDate) < new Date(),
+    totalAmount: Number(po.totalAmount || 0),
+    paidAmount: Number(po.advanceAmount || 0),     // often called paidAmount / receivedAmount
+    balance: Number(po.balanceAmount || 0),
+
+    purchaseItems,  // ← Most common field name for array of items
+
+    isPaid: Number(po.balanceAmount || 0) <= 0,
+    isOverdue: po.dueDate && new Date(po.dueDate) < new Date(),
   };
 };
 
@@ -1547,7 +2189,7 @@ const PurchaseOrderList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [converting, setConverting] = useState(false);
 
-  // Sync userData
+  // Sync user data from localStorage
   useEffect(() => {
     const handleStorageChange = () => {
       const updated = JSON.parse(localStorage.getItem("eBilling") || "{}");
@@ -1558,7 +2200,7 @@ const PurchaseOrderList = () => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  // Fetch purchase orders + auth check
+  // Fetch orders + auth checks
   useEffect(() => {
     if (!token) {
       toast.info("Please log in to continue.");
@@ -1586,7 +2228,6 @@ const PurchaseOrderList = () => {
     fetchPurchaseOrders();
   }, [token, companyId, navigate]);
 
-  // Delete order
   const deleteOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to delete this purchase order? This action cannot be undone.")) {
       return;
@@ -1599,19 +2240,17 @@ const PurchaseOrderList = () => {
       setSelectedOrder(null);
       toast.success("Purchase order deleted successfully");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete order");
+      toast.error(err.response?.data?.message || "Failed to delete purchase order");
     } finally {
       setLoading(false);
     }
   };
 
-  // Edit order
   const handleEdit = (orderId) => {
     navigate(`/create_purchase_order?edit=${orderId}`);
     setSelectedOrder(null);
   };
 
-  // Convert to Purchase
   const handleConvert = async (orderId) => {
     if (converting) return;
 
@@ -1622,36 +2261,292 @@ const PurchaseOrderList = () => {
     setConverting(true);
 
     try {
-      // 1. Fetch full PO details
-      const poRes = await api.get(`/purchase-order/${orderId}`);
-      const po = poRes.data;
+      // Get full purchase order details
+      const res = await api.get(`/purchase-order/${orderId}`);
+      const po = res.data;
 
-      // 2. Map to purchase payload
+      // Debug logs - open browser console to check
+      console.log("[PURCHASE CONVERT DEBUG] Full PO:", po);
+      console.log("[PURCHASE CONVERT DEBUG] Party ID:", po.partyResponseDto?.partyId);
+
       const payload = mapPoToPurchasePayload(po);
 
-      // 3. Convert
+      console.log("[PURCHASE CONVERT DEBUG] Payload to send:", payload);
+      console.log("[PURCHASE CONVERT DEBUG] Items:", payload.purchaseItems);
+
+      // Validation
+      if (!payload.partyId) {
+        throw new Error("Cannot convert: Party information is missing");
+      }
+
+      const missingIds = payload.purchaseItems.filter(item => !item.itemId);
+      if (missingIds.length > 0) {
+        console.warn("[WARNING] Items without itemId:", missingIds);
+        toast.warn(`${missingIds.length} item(s) missing product ID - conversion may fail`);
+      }
+
       await api.post(`/purchase-order/${orderId}/convert/to/purchase`, payload);
 
-      toast.success("Purchase order converted to Purchase successfully!");
+      toast.success("Purchase order converted to Purchase Bill successfully!");
 
       // Refresh list
-      const res = await api.get(`/company/${companyId}/purchase-order/list/according`);
-      setOrders(res.data || []);
+      const updatedRes = await api.get(`/company/${companyId}/purchase-order/list/according`);
+      setOrders(updatedRes.data || []);
+
       setSelectedOrder(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to convert to purchase");
+      console.error("[ERROR] Conversion failed:", err);
+      const errorMessage = err.response?.data?.message
+        || err.message
+        || "Failed to convert purchase order to bill";
+      toast.error(errorMessage);
     } finally {
       setConverting(false);
     }
   };
 
-  // Filter orders
   const filteredOrders = orders.filter((o) => {
     const matchesSearch =
       o.orderNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       o.partyResponseDto?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
+  const handlePrint = (order) => {
+    const printWindow = window.open("", "_blank");
+
+    if (!printWindow) {
+      toast.error("Please allow popups for printing");
+      return;
+    }
+
+    // Safe date formatting
+    const formatDate = (dateStr) => dateStr
+      ? new Date(dateStr).toLocaleDateString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric'
+      })
+      : "—";
+
+    // HTML escape helper
+    const escapeHtml = (unsafe = "") => {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Purchase Order ${escapeHtml(order.orderNo || '—')}</title>
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 1.2cm;
+          }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #000;
+            font-size: 10pt;
+            line-height: 1.4;
+            background: white;
+          }
+          .container {
+            max-width: 19cm;
+            margin: 0 auto;
+            padding: 0.8cm;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 0.6cm;
+            margin-bottom: 0.8cm;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 18pt;
+            color: #000;
+          }
+          .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1cm;
+          }
+          .info-box {
+            width: 48%;
+          }
+          .info-box h3 {
+            font-size: 12pt;
+            margin: 0 0 6px 0;
+            border-bottom: 1px solid #000;
+            padding-bottom: 4px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.8cm 0;
+            font-size: 9.5pt;
+          }
+          th, td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            text-align: left;
+          }
+          th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
+          .text-right {
+            text-align: right;
+          }
+          .total-section {
+            display: flex;
+            justify-content: flex-end;
+            margin: 1cm 0;
+          }
+          .total-box {
+            width: 45%;
+            border: 1px solid #000;
+          }
+          .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border-bottom: 1px solid #eee;
+          }
+          .total-row:last-child {
+            border-bottom: none;
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
+          .footer {
+            text-align: center;
+            font-size: 8.5pt;
+            color: #555;
+            border-top: 1px solid #000;
+            padding-top: 0.6cm;
+            margin-top: 1.5cm;
+          }
+          @media print {
+            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>PURCHASE ORDER</h1>
+            <p>
+              <strong>Order No:</strong> ${escapeHtml(order.orderNo || '—')} 
+              | <strong>Purchase Date:</strong> ${formatDate(order.purchaseDate)}
+              | <strong>Due Date:</strong> ${formatDate(order.dueDate)}
+            </p>
+            <p><strong>Status:</strong> ${order.orderType || 'OPEN'}</p>
+          </div>
+  
+          <div class="info-section">
+            <div class="info-box">
+              <h3>From (Company):</h3>
+              <p><strong>${escapeHtml(userData?.selectedCompany?.name || 'Your Company')}</strong></p>
+              <p>${escapeHtml(userData?.selectedCompany?.billingAddress || '—')}</p>
+              <p><strong>GSTIN:</strong> ${escapeHtml(userData?.selectedCompany?.gstin || '—')}</p>
+            </div>
+            <div class="info-box">
+              <h3>Supplier (To):</h3>
+              <p><strong>${escapeHtml(order.partyResponseDto?.name || '—')}</strong></p>
+              <p>${escapeHtml(order.partyResponseDto?.billingAddress || '—')}</p>
+              <p><strong>GSTIN:</strong> ${escapeHtml(order.partyResponseDto?.gstin || '—')}</p>
+              <p><strong>Phone:</strong> ${escapeHtml(order.partyResponseDto?.phoneNo || '—')}</p>
+            </div>
+          </div>
+  
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Rate (₹)</th>
+                <th>Tax (%)</th>
+                <th>Tax Amt (₹)</th>
+                <th>Discount (₹)</th>
+                <th>Total (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(order.purchaseOrderItemResponseList || []).map((item, i) => `
+                <tr>
+                  <td>${i + 1}</td>
+                  <td>${escapeHtml(item.itemName || '—')}<br>
+                      <small>${escapeHtml(item.description || '')}</small></td>
+                  <td class="text-right">${item.quantity || '—'}</td>
+                  <td>${escapeHtml(item.unit || 'PCS')}</td>
+                  <td class="text-right">${Number(item.perUnitRate || item.rate || 0).toFixed(2)}</td>
+                  <td class="text-right">${item.taxRate || '—'}</td>
+                  <td class="text-right">${Number(item.totalTaxAmount || 0).toFixed(2)}</td>
+                  <td class="text-right">${Number(item.discountAmount || 0).toFixed(2)}</td>
+                  <td class="text-right">${Number(item.totalAmount || 0).toFixed(2)}</td>
+                </tr>
+              `).join('') || '<tr><td colspan="9" class="text-center">No items</td></tr>'}
+            </tbody>
+          </table>
+  
+          <div class="total-section">
+            <div class="total-box">
+              <div class="total-row">
+                <span>Subtotal (ex-tax):</span>
+                <span>₹${Number((order.totalAmount || 0) - (order.totalTaxAmount || 0)).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Total Tax:</span>
+                <span>₹${Number(order.totalTaxAmount || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Total Discount:</span>
+                <span>₹${Number(order.totalDiscountAmount || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Grand Total:</span>
+                <span>₹${Number(order.totalAmount || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Advance Paid:</span>
+                <span>₹${Number(order.advanceAmount || 0).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Balance Due:</span>
+                <span>₹${Number(order.balanceAmount || 0).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+  
+          <div class="footer">
+            <p>Thank you for your business | This is a computer-generated document</p>
+            <p>Goods to be supplied as per terms agreed. Delivery within ${formatDate(order.dueDate)}.</p>
+          </div>
+        </div>
+  
+        <script>
+          window.onload = function() {
+            setTimeout(() => {
+              window.focus();
+              window.print();
+            }, 600);
+          }
+        </script>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+  };
 
   return (
     <div className={styles["company-form-container"]}>
@@ -1730,11 +2625,11 @@ const PurchaseOrderList = () => {
                     <td>{order.totalQuantity}</td>
                     <td className={styles["amount-cell"]}>
                       <span className={styles["amount"]}>
-                        ₹{Number.parseFloat(order.totalAmount || 0).toFixed(2)}
+                        ₹{Number(order.totalAmount || 0).toFixed(2)}
                       </span>
                     </td>
                     <td className={styles["received-cell"]}>
-                      ₹{Number.parseFloat(order.advanceAmount || 0).toFixed(2)}
+                      ₹{Number(order.advanceAmount || 0).toFixed(2)}
                     </td>
                     <td className={styles["balance-cell"]}>
                       <span
@@ -1742,14 +2637,13 @@ const PurchaseOrderList = () => {
                           order.balanceAmount > 0 ? styles["balance-pending"] : styles["balance-paid"]
                         }
                       >
-                        ₹{Number.parseFloat(order.balanceAmount || 0).toFixed(2)}
+                        ₹{Number(order.balanceAmount || 0).toFixed(2)}
                       </span>
                     </td>
                     <td>
                       <span
-                        className={`${styles["status-badge"]} ${
-                          order.orderType === "OPEN" ? styles["status-open"] : styles["status-closed"]
-                        }`}
+                        className={`${styles["status-badge"]} ${order.orderType === "OPEN" ? styles["status-open"] : styles["status-closed"]
+                          }`}
                       >
                         {order.orderType}
                       </span>
@@ -1778,9 +2672,8 @@ const PurchaseOrderList = () => {
                   <div className={styles["card-title-section"]}>
                     <h3 className={styles["card-invoice-number"]}>{order.orderNo}</h3>
                     <span
-                      className={`${styles["status-badge"]} ${
-                        order.orderType === "OPEN" ? styles["status-open"] : styles["status-closed"]
-                      }`}
+                      className={`${styles["status-badge"]} ${order.orderType === "OPEN" ? styles["status-open"] : styles["status-closed"]
+                        }`}
                     >
                       {order.orderType}
                     </span>
@@ -1804,7 +2697,7 @@ const PurchaseOrderList = () => {
                   <div className={styles["card-info-row"]}>
                     <span className={styles["info-label"]}>Total:</span>
                     <span className={styles["info-value-amount"]}>
-                      ₹{Number.parseFloat(order.totalAmount || 0).toFixed(2)}
+                      ₹{Number(order.totalAmount || 0).toFixed(2)}
                     </span>
                   </div>
                   <div className={styles["card-info-row"]}>
@@ -1814,7 +2707,7 @@ const PurchaseOrderList = () => {
                         order.balanceAmount > 0 ? styles["info-value-pending"] : styles["info-value-paid"]
                       }
                     >
-                      ₹{Number.parseFloat(order.balanceAmount || 0).toFixed(2)}
+                      ₹{Number(order.balanceAmount || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -1850,11 +2743,14 @@ const PurchaseOrderList = () => {
             <div className={styles["card-header"]}>
               <div className={styles["header-title-section"]}>
                 <h3>Purchase Order #{selectedOrder.orderNo}</h3>
-                <div className={`${styles["balance-badge"]} ${selectedOrder.balanceAmount <= 0 ? styles.paid : ""}`}>
+                <div
+                  className={`${styles["balance-badge"]} ${selectedOrder.balanceAmount <= 0 ? styles.paid : ""
+                    }`}
+                >
                   {selectedOrder.balanceAmount > 0 ? (
                     <>
                       <AlertCircle size={16} />
-                      Balance: ₹{Number.parseFloat(selectedOrder.balanceAmount || 0).toFixed(2)}
+                      Balance: ₹{Number(selectedOrder.balanceAmount || 0).toFixed(2)}
                     </>
                   ) : (
                     <>
@@ -1865,13 +2761,12 @@ const PurchaseOrderList = () => {
                 </div>
               </div>
               <div className={styles["header-actions"]}>
-                {/* EDIT & CONVERT: Only if not CLOSED */}
                 {selectedOrder.orderType !== "CLOSE" && (
                   <>
                     <button
                       onClick={() => handleEdit(selectedOrder.purchaseOrderId)}
                       className={`${styles["action-button"]} ${styles["edit-button"]}`}
-                      title="Edit order"
+                      title="Edit"
                     >
                       <Edit2 size={16} />
                       <span>Edit</span>
@@ -1892,15 +2787,24 @@ const PurchaseOrderList = () => {
                     </button>
                   </>
                 )}
+                <button
+                  onClick={() => handlePrint(selectedOrder)}
+                  className={`${styles["action-button"]} ${styles["print-button"]}`}
+                  title="Print Purchase Order"
+                >
+                  <Printer size={16} />
+                  <span>Print</span>
+                </button>
 
                 <button
                   onClick={() => deleteOrder(selectedOrder.purchaseOrderId)}
                   className={`${styles["action-button"]} ${styles["delete-button"]}`}
-                  title="Delete order"
+                  title="Delete"
                 >
                   <Trash2 size={16} />
                   <span>Delete</span>
                 </button>
+
                 <button
                   className={styles["close-modal-btn"]}
                   onClick={() => setSelectedOrder(null)}
@@ -1958,34 +2862,33 @@ const PurchaseOrderList = () => {
               <div className={styles["amount-breakdown"]}>
                 <div className={styles["breakdown-row"]}>
                   <span>Total (ex-tax):</span>
-                  <span>₹{Number.parseFloat(selectedOrder.totalAmountWithoutTax || 0).toFixed(2)}</span>
+                  <span>₹{Number((selectedOrder.totalAmount || 0) - (selectedOrder.totalTaxAmount || 0)).toFixed(2)}</span>
                 </div>
                 <div className={styles["breakdown-row"]}>
                   <span>Tax Amount:</span>
-                  <span>₹{Number.parseFloat(selectedOrder.totalTaxAmount || 0).toFixed(2)}</span>
+                  <span>₹{Number(selectedOrder.totalTaxAmount || 0).toFixed(2)}</span>
                 </div>
                 <div className={styles["breakdown-row"]}>
                   <span>Total Discount:</span>
-                  <span>₹{Number.parseFloat(selectedOrder.totalDiscount || 0).toFixed(2)}</span>
+                  <span>₹{Number(selectedOrder.totalDiscountAmount || 0).toFixed(2)}</span>
                 </div>
                 <div className={styles["breakdown-row"]}>
                   <span>Total Amount:</span>
                   <span className={styles["total-amount"]}>
-                    ₹{Number.parseFloat(selectedOrder.totalAmount || 0).toFixed(2)}
+                    ₹{Number(selectedOrder.totalAmount || 0).toFixed(2)}
                   </span>
                 </div>
                 <div className={styles["breakdown-row"]}>
                   <span>Advance Paid:</span>
-                  <span>₹{Number.parseFloat(selectedOrder.advanceAmount || 0).toFixed(2)}</span>
+                  <span>₹{Number(selectedOrder.advanceAmount || 0).toFixed(2)}</span>
                 </div>
                 <div
-                  className={`${styles["breakdown-row"]} ${
-                    selectedOrder.balanceAmount > 0 ? styles["balance-row-pending"] : styles["balance-row-paid"]
-                  }`}
+                  className={`${styles["breakdown-row"]} ${selectedOrder.balanceAmount > 0 ? styles["balance-row-pending"] : styles["balance-row-paid"]
+                    }`}
                 >
                   <span>Balance Due:</span>
                   <span className={styles["balance-amount"]}>
-                    ₹{Number.parseFloat(selectedOrder.balanceAmount || 0).toFixed(2)}
+                    ₹{Number(selectedOrder.balanceAmount || 0).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -2069,12 +2972,12 @@ const PurchaseOrderList = () => {
                           <td>{it.itemName}</td>
                           <td>{it.quantity}</td>
                           <td>{it.unit}</td>
-                          <td>₹{Number.parseFloat(it.perUnitRate || 0).toFixed(2)}</td>
+                          <td>₹{Number(it.perUnitRate || it.rate || 0).toFixed(2)}</td>
                           <td>{it.taxType}</td>
                           <td>{it.taxRate}</td>
-                          <td>₹{Number.parseFloat(it.discountAmount || 0).toFixed(2)}</td>
-                          <td>₹{Number.parseFloat(it.totalTaxAmount || 0).toFixed(2)}</td>
-                          <td>₹{Number.parseFloat(it.totalAmount || 0).toFixed(2)}</td>
+                          <td>₹{Number(it.discountAmount || 0).toFixed(2)}</td>
+                          <td>₹{Number(it.totalTaxAmount || 0).toFixed(2)}</td>
+                          <td>₹{Number(it.totalAmount || 0).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>

@@ -2197,7 +2197,43 @@ const CreateSale = () => {
             </div>
           </div>
         </div>
+        {/* BOTTOM ACTION BUTTONS */}
+        <div className={styles.formActions}>
+          <button
+            type="button"
+            onClick={() => navigate("/sales")}
+            className={styles.buttonSecondary}
+            disabled={loading}
+          >
+            <ArrowLeft size={18} />
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className={styles.buttonPrimary}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader size={18} className={styles.spinnerSmall} />
+                {isEditMode ? "Updating..." : "Saving..."}
+              </>
+            ) : isEditMode ? (
+              <>
+                <CheckCircle size={18} />
+                Update Sale
+              </>
+            ) : (
+              <>
+                <CheckCircle size={18} />
+                Create Sale
+              </>
+            )}
+          </button>
+        </div>
       </form>
+      <div style={{ height: "2rem" }}></div>
     </div>
   );
 };

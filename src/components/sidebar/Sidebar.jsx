@@ -932,9 +932,9 @@ const Sidebar = () => {
                       <NavItem to="sale_report" icon={DollarSign}>
                         Sale Report
                       </NavItem>
-                      <NavItem to="statement_list" icon={FileText}>
+                      {/* <NavItem to="statement_list" icon={FileText}>
                         Statement List
-                      </NavItem>
+                      </NavItem> */}
                     </div>
                   )}
                 </div>

@@ -1414,6 +1414,42 @@ function CreateCompany() {
               </div>
             </div>
           </div>
+
+          {/* FORM ACTION BUTTONS */}
+          <div className={styles.formActions}>
+            <button
+              type="button"
+              onClick={() => navigate("/company-list")}
+              className={styles.buttonSecondary}
+              disabled={loading || loadingData}
+            >
+              <ArrowLeft size={18} />
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              className={styles.buttonPrimary}
+              disabled={loading || loadingData}
+            >
+              {loading ? (
+                <>
+                  <Loader size={18} className={styles.spinnerSmall} />
+                  Saving...
+                </>
+              ) : isEditMode ? (
+                <>
+                  <CheckCircle size={18} />
+                  Update Company
+                </>
+              ) : (
+                <>
+                  <CheckCircle size={18} />
+                  Create Company
+                </>
+              )}
+            </button>
+          </div>
         </form>
       )}
     </div>
