@@ -746,9 +746,9 @@ const Login = () => {
                   </label>
                 </div>
 
-                <Link to="/forgot-password" className={styles.forgotLink} tabIndex={0}>
+                {/* <Link to="/forgot-password" className={styles.forgotLink} tabIndex={0}>
                   Forgot password?
-                </Link>
+                </Link> */}
               </div>
 
               <Button
@@ -765,9 +765,9 @@ const Login = () => {
 
             <div className={styles.signupText}>
               Don't have an account?{' '}
-              <Link to="/register" className={styles.signupLink}>
+              {/* <Link to="/register" className={styles.signupLink}>
                 Sign up
-              </Link>
+              </Link> */}
             </div>
           </div>
         </div>
